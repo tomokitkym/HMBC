@@ -13,8 +13,8 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #FAFAFA;
-            color: #18181B;
+            background-color: #FBFBFB;
+            color: #3F3F46;
             overscroll-behavior: none;
             user-select: none;
             -webkit-user-select: none;
@@ -64,7 +64,16 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            background-color: #FAFAFA;
+            background-color: #FBFBFB;
+        }
+
+        /* 12色カラーピッカー用ポップオーバー */
+        .color-palette-popover {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 4px;
+            z-index: 40;
         }
 
         /* スマホ（幅767px以下）かつ縦向きの場合は、自動的に90度回転して横画面表示にする */
@@ -84,25 +93,31 @@
 <body>
 
     <div id="app-wrapper">
-        <!-- ヘッダー（コンパクト・フルワイド） -->
-        <header class="bg-white border border-zinc-200 rounded-xl shrink-0 mb-1.5 shadow-sm">
-            <div class="w-full px-3 h-9 md:h-11 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <div class="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-zinc-900 text-white flex items-center justify-center font-bold text-xs tracking-tighter">
+        <!-- ヘッダー（リセットボタンを右側に配置） -->
+        <header class="bg-white border border-zinc-200/80 rounded-xl shrink-0 mb-1.5 shadow-sm">
+            <div class="w-full px-3 h-9 md:h-11 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2 shrink-0">
+                    <div class="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-zinc-700 text-white flex items-center justify-center font-bold text-xs tracking-tighter">
                         HM
                     </div>
-                    <span class="font-bold text-zinc-900 tracking-tight text-sm md:text-base">HMBC</span>
+                    <span class="font-bold text-zinc-700 tracking-tight text-sm md:text-base">HMBC</span>
                 </div>
 
-                <!-- タブ切り替え（ミニマル・セグメントコントロール） -->
-                <nav class="flex bg-zinc-100 p-0.5 rounded-lg">
-                    <button id="tab-timer" onclick="switchTab('timer')" class="px-3 md:px-4 py-1 rounded-md text-xs md:text-sm font-medium transition-all bg-white text-zinc-900 shadow-sm">
+                <!-- タブ切り替え（中央配置） -->
+                <nav class="flex bg-zinc-100/80 p-0.5 rounded-lg">
+                    <button id="tab-timer" onclick="switchTab('timer')" class="px-3 md:px-5 py-1 rounded-md text-xs md:text-sm font-semibold transition-all bg-white text-zinc-800 shadow-sm">
                         タイマー・得点
                     </button>
-                    <button id="tab-board" onclick="switchTab('board')" class="px-3 md:px-4 py-1 rounded-md text-xs md:text-sm font-medium transition-all text-zinc-500 hover:text-zinc-900">
+                    <button id="tab-board" onclick="switchTab('board')" class="px-3 md:px-5 py-1 rounded-md text-xs md:text-sm font-semibold transition-all text-zinc-400 hover:text-zinc-700">
                         作戦盤
                     </button>
                 </nav>
+
+                <!-- 全リセットボタン（ヘッダー右端に配置） -->
+                <button onclick="resetAllGame()" class="px-2.5 md:px-3.5 py-1 rounded-lg bg-red-50/80 text-red-500 border border-red-200/80 hover:bg-red-100/70 active:scale-95 transition flex items-center gap-1 text-xs md:text-sm font-bold shrink-0" title="時計・ピリオド・得点を初期化">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 md:w-4 md:h-4"></i>
+                    <span>全リセット</span>
+                </button>
             </div>
         </header>
 
@@ -110,128 +125,137 @@
         <main class="flex-1 w-full min-h-0 flex flex-col">
 
             <!-- ==========================================
-                 1. タイマー & スコアボード画面（横画面フルワイド最適化）
+                 1. タイマー & スコアボード画面
             ========================================== -->
             <section id="view-timer" class="flex-1 flex flex-col justify-between gap-1.5 md:gap-2.5 min-h-0">
                 
-                <!-- 上段：メインタイマー(7) + 24秒ショットクロック(3) + 全体リセット(2) -->
-                <div class="grid grid-cols-12 gap-1.5 md:gap-2.5 h-[44%] min-h-0">
+                <!-- 上段：メインタイマー（#3E3F46） + ピリオド＆ポゼッション（少し濃いグレー） + 24秒ショットクロック（#3E3F46） -->
+                <div class="grid grid-cols-12 gap-1.5 md:gap-2.5 h-[45%] min-h-0">
                     
-                    <!-- メインタイマー (7カラム分) -->
-                    <div class="col-span-7 bg-white rounded-2xl border border-zinc-200 px-3 py-1.5 md:p-4 flex flex-col items-center justify-between shadow-sm relative overflow-hidden">
-                        <div class="w-full flex justify-between items-center text-[10px] md:text-xs font-medium text-zinc-400">
+                    <!-- メインタイマー (5カラム分：背景#3E3F46・文字白・中央揃え大きく) -->
+                    <div class="col-span-5 bg-[#3E3F46] rounded-2xl border border-[#52535C] px-3 py-1.5 md:p-3 flex flex-col items-center justify-between shadow-sm relative overflow-hidden text-zinc-50">
+                        <div class="w-full flex justify-center items-center gap-2 text-[10px] md:text-xs font-semibold text-zinc-300">
                             <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3 md:w-3.5 md:h-3.5"></i> GAME CLOCK</span>
-                            <span id="timer-status-badge" class="px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-600 text-[9px] md:text-xs">STOPPED</span>
+                            <span id="timer-status-badge" class="px-2 py-0.5 rounded-full bg-zinc-600 text-zinc-200 text-[9px] md:text-xs">STOPPED</span>
                         </div>
 
                         <!-- タップ＆スワイプ対応タイマー表示 -->
-                        <div id="main-timer-area" class="swipe-area w-full flex-1 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-50 select-none" title="タップで開始/停止、停止中に上下スワイプで秒数調整">
-                            <div id="main-timer-display" class="font-mono-num text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-zinc-900 leading-none">
+                        <div id="main-timer-area" class="swipe-area w-full flex-1 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-white/10 select-none text-center" title="タップで開始/停止、停止中に上下スワイプで秒数調整">
+                            <div id="main-timer-display" class="font-mono-num text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight text-white leading-none text-center">
                                 05:00
                             </div>
                         </div>
 
                         <!-- 下部コントロール：1分プラス・マイナスボタン -->
                         <div class="w-full flex items-center justify-center gap-2">
-                            <button onclick="subOneMinute()" class="flex-1 max-w-[110px] py-1 md:py-1.5 rounded-lg bg-zinc-100 text-zinc-700 text-xs md:text-sm font-medium hover:bg-zinc-200 active:scale-95 transition flex items-center justify-center gap-1">
+                            <button onclick="subOneMinute()" class="flex-1 max-w-[110px] py-1 md:py-1.5 rounded-lg bg-zinc-600 text-zinc-100 text-xs md:text-sm font-semibold hover:bg-zinc-500 active:scale-95 transition flex items-center justify-center gap-1">
                                 <i data-lucide="minus" class="w-3.5 h-3.5"></i> 1分
                             </button>
-                            <button onclick="addOneMinute()" class="flex-1 max-w-[110px] py-1 md:py-1.5 rounded-lg bg-zinc-900 text-white text-xs md:text-sm font-medium hover:bg-zinc-800 active:scale-95 transition flex items-center justify-center gap-1">
+                            <button onclick="addOneMinute()" class="flex-1 max-w-[110px] py-1 md:py-1.5 rounded-lg bg-zinc-100 text-zinc-800 text-xs md:text-sm font-bold hover:bg-white active:scale-95 transition flex items-center justify-center gap-1">
                                 <i data-lucide="plus" class="w-3.5 h-3.5"></i> 1分
                             </button>
                         </div>
                     </div>
 
-                    <!-- 24秒ショットクロック (3カラム分) -->
-                    <div class="col-span-3 bg-white rounded-2xl border border-zinc-200 px-2.5 py-1.5 md:p-4 flex flex-col items-center justify-between shadow-sm">
-                        <div class="w-full flex justify-between items-center text-[10px] md:text-xs font-medium text-zinc-400">
-                            <span class="truncate">SHOT CLOCK</span>
-                            <span id="shot-status-badge" class="px-1.5 py-0.5 rounded-full bg-zinc-100 text-zinc-600 text-[9px] md:text-xs shrink-0">STOP</span>
+                    <!-- ピリオド ＆ ポゼッションアロー表示 (2カラム分：タイマーと24秒の間に配置・少し濃いグレー) -->
+                    <div id="period-area" tabindex="0" class="swipe-area col-span-2 bg-zinc-600 rounded-2xl border border-zinc-500 p-1.5 md:p-2.5 flex flex-col items-center justify-between shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-300 cursor-ns-resize h-full text-center">
+                        <!-- 上部：ピリオド表示 -->
+                        <div class="w-full flex-1 flex flex-col items-center justify-center cursor-ns-resize" title="上下スワイプでピリオド切替">
+                            <span class="text-[9px] md:text-xs font-bold text-zinc-200 tracking-wider mb-0.5">PERIOD</span>
+                            <span id="period-display" class="font-mono-num text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-none text-center">Q1</span>
                         </div>
 
-                        <div id="shot-clock-area" class="swipe-area w-full flex-1 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-50 transition select-none" title="タップで開始/停止、停止中に上下スワイプで秒数調整">
-                            <div id="shot-clock-display" class="font-mono-num text-4xl sm:text-5xl md:text-6xl font-bold text-amber-600 leading-none">
+                        <div class="w-full h-px bg-zinc-500 my-1"></div>
+
+                        <!-- 下部：ポゼッションアロー -->
+                        <div id="possession-area" onclick="togglePossession()" class="w-full flex-1 flex flex-col items-center justify-center cursor-pointer rounded-xl hover:bg-white/10 active:scale-95 transition select-none" title="タップでポゼッション方向を変更">
+                            <span class="text-[8px] md:text-[10px] font-bold text-zinc-200 tracking-wider mb-0.5">POSSESSION</span>
+                            <div id="possession-display" class="flex items-center justify-center h-7 md:h-9 transition-transform duration-150">
+                                <i data-lucide="arrow-right" class="w-7 h-7 md:w-8 md:h-8 stroke-[2.5]"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 24秒ショットクロック (5カラム分：背景#3E3F46・アンバー文字) -->
+                    <div class="col-span-5 bg-[#3E3F46] rounded-2xl border border-[#52535C] px-3 py-1.5 md:p-3 flex flex-col items-center justify-between shadow-sm">
+                        <div class="w-full flex justify-center items-center gap-2 text-[10px] md:text-xs font-semibold text-zinc-300">
+                            <span>SHOT CLOCK</span>
+                            <span id="shot-status-badge" class="px-2 py-0.5 rounded-full bg-zinc-600 text-zinc-200 text-[9px] md:text-xs shrink-0">STOPPED</span>
+                        </div>
+
+                        <div id="shot-clock-area" class="swipe-area w-full flex-1 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-white/10 transition select-none text-center" title="タップで開始/停止、停止中に上下スワイプで秒数調整">
+                            <div id="shot-clock-display" class="font-mono-num text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-amber-400 leading-none text-center">
                                 24
                             </div>
                         </div>
 
-                        <div class="w-full grid grid-cols-2 gap-1.5">
-                            <button onclick="resetShotClock(24)" class="py-1 md:py-1.5 rounded-lg bg-zinc-900 text-white text-xs md:text-sm font-semibold hover:bg-zinc-800 active:scale-95 transition">
+                        <div class="w-full flex items-center justify-center gap-2">
+                            <button onclick="resetShotClock(24)" class="flex-1 max-w-[110px] py-1 md:py-1.5 rounded-lg bg-zinc-100 text-zinc-800 text-xs md:text-sm font-bold hover:bg-white active:scale-95 transition">
                                 24s
                             </button>
-                            <button onclick="resetShotClock(14)" class="py-1 md:py-1.5 rounded-lg bg-zinc-100 text-zinc-800 text-xs md:text-sm font-semibold hover:bg-zinc-200 active:scale-95 transition">
+                            <button onclick="resetShotClock(14)" class="flex-1 max-w-[110px] py-1 md:py-1.5 rounded-lg bg-zinc-600 text-zinc-100 text-xs md:text-sm font-semibold hover:bg-zinc-500 active:scale-95 transition">
                                 14s
                             </button>
                         </div>
                     </div>
 
-                    <!-- 全体リセットパネル (2カラム分：上段右端に配置して操作性向上) -->
-                    <div class="col-span-2 bg-white rounded-2xl border border-zinc-200 p-2 md:p-3 flex flex-col items-center justify-between shadow-sm">
-                        <span class="text-[9px] md:text-xs font-semibold text-zinc-400 tracking-wider">SYSTEM</span>
-                        <button onclick="resetAllGame()" class="w-full flex-1 my-1 rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 active:scale-95 transition flex flex-col items-center justify-center gap-1 p-1">
-                            <i data-lucide="rotate-ccw" class="w-5 h-5 md:w-6 md:h-6"></i>
-                            <span class="text-[10px] md:text-xs font-bold leading-tight text-center">全リセット</span>
-                        </button>
-                        <span class="text-[8px] md:text-[10px] text-zinc-400 text-center leading-tight">時計・得点初期化</span>
-                    </div>
                 </div>
 
-                <!-- 下段：スコアボード（ホーム・ピリオド/ポゼッション・ゲスト） -->
-                <div class="grid grid-cols-12 gap-1.5 md:gap-2.5 flex-1 min-h-0">
+                <!-- 下段：スコアボード（HOME ＆ GUEST 大きく中央揃え・12色カラー選択対応） -->
+                <div class="grid grid-cols-2 gap-1.5 md:gap-2.5 flex-1 min-h-0">
                     
-                    <!-- HOME チーム (5カラム分) -->
-                    <div id="score-area-home" tabindex="0" class="swipe-area col-span-5 bg-white rounded-2xl border border-zinc-200 px-3 py-2 md:p-5 flex flex-col items-center justify-between shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-ns-resize">
-                        <div class="w-full flex justify-between items-center gap-2">
-                            <div class="flex items-center gap-1.5 flex-1 min-w-0 bg-zinc-50 hover:bg-zinc-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-zinc-900 px-2.5 py-1 rounded-lg border border-zinc-200/80 transition">
-                                <i data-lucide="pencil" class="w-3 h-3 text-zinc-400 shrink-0"></i>
-                                <input type="text" id="team-name-home" value="HOME" placeholder="チーム名" aria-label="ホームチーム名" class="font-bold text-zinc-800 text-xs md:text-base tracking-wide bg-transparent focus:outline-none w-full min-w-0">
+                    <!-- HOME チーム -->
+                    <div id="score-area-home" tabindex="0" style="background-color: #FFFFFF; color: #3F3F46;" class="swipe-area rounded-2xl border border-zinc-200/80 px-3 py-2 md:p-4 flex flex-col items-center justify-between shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-400 cursor-ns-resize relative transition-colors duration-200">
+                        <!-- チーム名入力（中央揃え）＋ 背景色選択ボタン -->
+                        <div class="w-full flex items-center justify-center relative">
+                            <div id="team-input-box-home" class="flex items-center justify-center gap-1.5 w-[72%] bg-black/[0.04] hover:bg-black/[0.08] focus-within:ring-2 focus-within:ring-current px-3 py-1 rounded-lg transition">
+                                <i data-lucide="pencil" class="w-3.5 h-3.5 opacity-50 shrink-0"></i>
+                                <input type="text" id="team-name-home" value="HOME" placeholder="チーム名" aria-label="ホームチーム名" class="font-bold text-sm sm:text-base md:text-xl tracking-wide bg-transparent focus:outline-none w-full text-center">
                             </div>
-                            <span class="w-2.5 h-2.5 rounded-full bg-zinc-900 shrink-0"></span>
+
+                            <!-- 12色カラー選択トリガー -->
+                            <div class="absolute right-0">
+                                <button type="button" onclick="toggleColorPicker(event, 'home')" class="p-1.5 rounded-lg bg-black/[0.06] hover:bg-black/[0.12] transition flex items-center justify-center" title="背景色を変更">
+                                    <i data-lucide="palette" class="w-4 h-4"></i>
+                                </button>
+                                <div id="color-picker-home" class="hidden color-palette-popover bg-white border border-zinc-200 rounded-xl p-2 shadow-lg grid grid-cols-6 gap-1.5 w-[180px]" onclick="event.stopPropagation()"></div>
+                            </div>
                         </div>
                         
-                        <div id="score-display-home" class="font-mono-num text-5xl sm:text-6xl md:text-8xl font-bold text-zinc-900 leading-none">
+                        <!-- 得点表示（特大・中央揃え） -->
+                        <div id="score-display-home" class="font-mono-num text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold leading-none text-center my-auto">
                             0
                         </div>
 
-                        <div class="text-[10px] md:text-xs text-zinc-400 text-center flex items-center gap-1">
+                        <div class="text-[10px] md:text-xs opacity-50 text-center flex items-center justify-center gap-1 font-medium">
                             <i data-lucide="arrow-up-down" class="w-3 h-3"></i> 上下スワイプで得点調整
                         </div>
                     </div>
 
-                    <!-- ピリオド ＆ ポゼッションアロー表示 (2カラム分) -->
-                    <div id="period-area" tabindex="0" class="swipe-area col-span-2 bg-white rounded-2xl border border-zinc-200 p-1.5 md:p-3 flex flex-col items-center justify-between shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-ns-resize h-full">
-                        <!-- 上部：ピリオド表示 -->
-                        <div class="w-full flex-1 flex flex-col items-center justify-center cursor-ns-resize" title="上下スワイプでピリオド切替">
-                            <span class="text-[9px] md:text-xs font-semibold text-zinc-400 tracking-wider mb-0.5">PERIOD</span>
-                            <span id="period-display" class="font-mono-num text-2xl sm:text-3xl md:text-4xl font-bold text-zinc-900 leading-none">Q1</span>
-                        </div>
-
-                        <div class="w-full h-px bg-zinc-100 my-1"></div>
-
-                        <!-- 下部：ポゼッションアロー -->
-                        <div id="possession-area" onclick="togglePossession()" class="w-full flex-1 flex flex-col items-center justify-center cursor-pointer rounded-xl hover:bg-zinc-50 active:scale-95 transition select-none" title="タップでポゼッション方向を変更">
-                            <span class="text-[8px] md:text-[10px] font-semibold text-zinc-400 tracking-wider mb-0.5">POSSESSION</span>
-                            <div id="possession-display" class="flex items-center justify-center h-6 md:h-8 transition-transform duration-150">
-                                <i data-lucide="arrow-right" class="w-6 h-6 md:w-7 md:h-7 text-amber-500 stroke-[2.5]"></i>
+                    <!-- GUEST チーム -->
+                    <div id="score-area-guest" tabindex="0" style="background-color: #FFFFFF; color: #3F3F46;" class="swipe-area rounded-2xl border border-zinc-200/80 px-3 py-2 md:p-4 flex flex-col items-center justify-between shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-400 cursor-ns-resize relative transition-colors duration-200">
+                        <!-- チーム名入力（中央揃え）＋ 背景色選択ボタン -->
+                        <div class="w-full flex items-center justify-center relative">
+                            <div id="team-input-box-guest" class="flex items-center justify-center gap-1.5 w-[72%] bg-black/[0.04] hover:bg-black/[0.08] focus-within:ring-2 focus-within:ring-current px-3 py-1 rounded-lg transition">
+                                <i data-lucide="pencil" class="w-3.5 h-3.5 opacity-50 shrink-0"></i>
+                                <input type="text" id="team-name-guest" value="GUEST" placeholder="チーム名" aria-label="ゲストチーム名" class="font-bold text-sm sm:text-base md:text-xl tracking-wide bg-transparent focus:outline-none w-full text-center">
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- GUEST チーム (5カラム分) -->
-                    <div id="score-area-guest" tabindex="0" class="swipe-area col-span-5 bg-white rounded-2xl border border-zinc-200 px-3 py-2 md:p-5 flex flex-col items-center justify-between shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-ns-resize">
-                        <div class="w-full flex justify-between items-center gap-2">
-                            <div class="flex items-center gap-1.5 flex-1 min-w-0 bg-zinc-50 hover:bg-zinc-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-zinc-900 px-2.5 py-1 rounded-lg border border-zinc-200/80 transition">
-                                <i data-lucide="pencil" class="w-3 h-3 text-zinc-400 shrink-0"></i>
-                                <input type="text" id="team-name-guest" value="GUEST" placeholder="チーム名" aria-label="ゲストチーム名" class="font-bold text-zinc-800 text-xs md:text-base tracking-wide bg-transparent focus:outline-none w-full min-w-0">
+                            <!-- 12色カラー選択トリガー -->
+                            <div class="absolute right-0">
+                                <button type="button" onclick="toggleColorPicker(event, 'guest')" class="p-1.5 rounded-lg bg-black/[0.06] hover:bg-black/[0.12] transition flex items-center justify-center" title="背景色を変更">
+                                    <i data-lucide="palette" class="w-4 h-4"></i>
+                                </button>
+                                <div id="color-picker-guest" class="hidden color-palette-popover bg-white border border-zinc-200 rounded-xl p-2 shadow-lg grid grid-cols-6 gap-1.5 w-[180px]" onclick="event.stopPropagation()"></div>
                             </div>
-                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
                         </div>
                         
-                        <div id="score-display-guest" class="font-mono-num text-5xl sm:text-6xl md:text-8xl font-bold text-zinc-900 leading-none">
+                        <!-- 得点表示（特大・中央揃え） -->
+                        <div id="score-display-guest" class="font-mono-num text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold leading-none text-center my-auto">
                             0
                         </div>
 
-                        <div class="text-[10px] md:text-xs text-zinc-400 text-center flex items-center gap-1">
+                        <div class="text-[10px] md:text-xs opacity-50 text-center flex items-center justify-center gap-1 font-medium">
                             <i data-lucide="arrow-up-down" class="w-3 h-3"></i> 上下スワイプで得点調整
                         </div>
                     </div>
@@ -245,7 +269,7 @@
             <section id="view-board" class="hidden flex-1 grid grid-cols-12 gap-1.5 md:gap-3 min-h-0">
                 
                 <!-- 左カラム（8カラム分）：コートを画面いっぱい大きく表示 -->
-                <div class="col-span-8 bg-white rounded-2xl border border-zinc-200 p-1.5 md:p-2 shadow-sm flex items-center justify-center overflow-hidden h-full">
+                <div class="col-span-8 bg-white rounded-2xl border border-zinc-200/80 p-1.5 md:p-2 shadow-sm flex items-center justify-center overflow-hidden h-full">
                     <div id="court-container" class="relative h-full max-w-full aspect-[626/400] rounded-xl overflow-hidden select-none bg-cover bg-center shadow-inner">
                         <!-- 手書き線描画用キャンバス -->
                         <canvas id="drawing-canvas" class="absolute inset-0 w-full h-full z-10"></canvas>
@@ -259,23 +283,23 @@
                 <div class="col-span-4 flex flex-col gap-1.5 md:gap-2 min-h-0 h-full">
                     
                     <!-- 作戦名入力 -->
-                    <div class="bg-white rounded-xl border border-zinc-200 px-2.5 py-1.5 flex items-center gap-1.5 shadow-sm shrink-0">
+                    <div class="bg-white rounded-xl border border-zinc-200/80 px-2.5 py-1.5 flex items-center gap-1.5 shadow-sm shrink-0">
                         <i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-zinc-400 shrink-0"></i>
-                        <input type="text" id="tactic-name" placeholder="作戦名（例：ホーンセット）" class="w-full text-xs md:text-sm font-medium text-zinc-900 placeholder-zinc-400 bg-transparent focus:outline-none">
+                        <input type="text" id="tactic-name" placeholder="作戦名（例：ホーンセット）" class="w-full text-xs md:text-sm font-medium text-zinc-700 placeholder-zinc-400 bg-transparent focus:outline-none">
                     </div>
 
                     <!-- 描画ツール切り替え -->
-                    <div class="bg-white rounded-xl border border-zinc-200 p-1.5 flex flex-wrap items-center justify-between gap-1 shadow-sm shrink-0">
-                        <div class="flex items-center gap-1 bg-zinc-100 p-0.5 rounded-lg w-full justify-between">
-                            <button id="tool-move" onclick="setBoardTool('move')" class="flex-1 py-1 px-1.5 rounded-md text-[11px] md:text-xs font-medium bg-white text-zinc-900 shadow-sm flex items-center justify-center gap-1" title="選手・ボール移動">
+                    <div class="bg-white rounded-xl border border-zinc-200/80 p-1.5 flex flex-wrap items-center justify-between gap-1 shadow-sm shrink-0">
+                        <div class="flex items-center gap-1 bg-zinc-100/80 p-0.5 rounded-lg w-full justify-between">
+                            <button id="tool-move" onclick="setBoardTool('move')" class="flex-1 py-1 px-1.5 rounded-md text-[11px] md:text-xs font-medium bg-white text-zinc-800 shadow-sm flex items-center justify-center gap-1" title="選手・ボール移動">
                                 <i data-lucide="hand" class="w-3.5 h-3.5"></i><span>移動</span>
                             </button>
                             <div id="pen-tool-wrapper" class="flex-1 flex items-center justify-center gap-1">
-                                <button id="tool-pen" onclick="setBoardTool('pen')" class="w-full py-1 px-1.5 rounded-md text-[11px] md:text-xs font-medium text-zinc-600 hover:text-zinc-900 flex items-center justify-center gap-1" title="線を描く">
+                                <button id="tool-pen" onclick="setBoardTool('pen')" class="w-full py-1 px-1.5 rounded-md text-[11px] md:text-xs font-medium text-zinc-500 hover:text-zinc-800 flex items-center justify-center gap-1" title="線を描く">
                                     <i data-lucide="pen-tool" class="w-3.5 h-3.5"></i><span>ペン</span>
                                 </button>
                             </div>
-                            <button id="tool-eraser" onclick="setBoardTool('eraser')" class="flex-1 py-1 px-1.5 rounded-md text-[11px] md:text-xs font-medium text-zinc-600 hover:text-zinc-900 flex items-center justify-center gap-1" title="線を消す">
+                            <button id="tool-eraser" onclick="setBoardTool('eraser')" class="flex-1 py-1 px-1.5 rounded-md text-[11px] md:text-xs font-medium text-zinc-500 hover:text-zinc-800 flex items-center justify-center gap-1" title="線を消す">
                                 <i data-lucide="eraser" class="w-3.5 h-3.5"></i><span>消す</span>
                             </button>
                         </div>
@@ -284,28 +308,28 @@
                         <div class="w-full flex items-center justify-between px-1 pt-0.5">
                             <div class="flex items-center gap-2">
                                 <span class="text-[10px] text-zinc-400">ペン色:</span>
-                                <button id="pen-color-black" onclick="setPenColor('#18181B')" class="w-4 h-4 rounded-full bg-zinc-900 border border-white shadow-sm ring-2 ring-offset-1 ring-zinc-400" title="黒ペン"></button>
-                                <button id="pen-color-red" onclick="setPenColor('#DC2626')" class="w-4 h-4 rounded-full bg-red-600 border border-white shadow-sm ring-1 ring-zinc-300" title="赤ペン"></button>
+                                <button id="pen-color-black" onclick="setPenColor('#3F3F46')" class="w-4 h-4 rounded-full bg-zinc-700 border border-white shadow-sm ring-2 ring-offset-1 ring-zinc-300" title="チャコールペン"></button>
+                                <button id="pen-color-red" onclick="setPenColor('#EF4444')" class="w-4 h-4 rounded-full bg-red-500 border border-white shadow-sm ring-1 ring-zinc-200" title="ソフトレッドペン"></button>
                             </div>
-                            <button onclick="clearLines()" class="px-2 py-0.5 rounded-md text-[10px] md:text-xs font-medium text-red-600 hover:bg-red-50 flex items-center gap-1" title="線をすべて消す">
+                            <button onclick="clearLines()" class="px-2 py-0.5 rounded-md text-[10px] md:text-xs font-medium text-red-500 hover:bg-red-50 flex items-center gap-1" title="線をすべて消す">
                                 <i data-lucide="trash-2" class="w-3 h-3"></i><span>線全消去</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- 選手・ボール追加・削除コントロール -->
-                    <div class="bg-white rounded-xl border border-zinc-200 p-2 flex flex-col gap-1.5 shadow-sm shrink-0">
+                    <div class="bg-white rounded-xl border border-zinc-200/80 p-2 flex flex-col gap-1.5 shadow-sm shrink-0">
                         <!-- オフェンス -->
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-1.5">
-                                <span class="w-2.5 h-2.5 rounded-full bg-zinc-900 shrink-0"></span>
-                                <span class="text-[11px] md:text-xs font-semibold text-zinc-700">オフェンス (<span id="offense-count">5</span>)</span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-zinc-700 shrink-0"></span>
+                                <span class="text-[11px] md:text-xs font-semibold text-zinc-600">オフェンス (<span id="offense-count">5</span>)</span>
                             </div>
                             <div class="flex items-center gap-1">
-                                <button onclick="removePlayer('offense')" class="w-6 h-6 rounded-md bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center transition">
+                                <button onclick="removePlayer('offense')" class="w-6 h-6 rounded-md bg-zinc-100 hover:bg-zinc-200 text-zinc-600 flex items-center justify-center transition">
                                     <i data-lucide="minus" class="w-3 h-3"></i>
                                 </button>
-                                <button onclick="addPlayer('offense')" class="w-6 h-6 rounded-md bg-zinc-900 hover:bg-zinc-800 text-white flex items-center justify-center transition">
+                                <button onclick="addPlayer('offense')" class="w-6 h-6 rounded-md bg-zinc-700 hover:bg-zinc-600 text-white flex items-center justify-center transition">
                                     <i data-lucide="plus" class="w-3 h-3"></i>
                                 </button>
                             </div>
@@ -314,14 +338,14 @@
                         <!-- ディフェンス -->
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-1.5">
-                                <span class="w-2.5 h-2.5 rounded-full bg-white border-2 border-red-600 shrink-0"></span>
-                                <span class="text-[11px] md:text-xs font-semibold text-zinc-700">ディフェンス (<span id="defense-count">5</span>)</span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-white border-2 border-red-400 shrink-0"></span>
+                                <span class="text-[11px] md:text-xs font-semibold text-zinc-600">ディフェンス (<span id="defense-count">5</span>)</span>
                             </div>
                             <div class="flex items-center gap-1">
-                                <button onclick="removePlayer('defense')" class="w-6 h-6 rounded-md bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center transition">
+                                <button onclick="removePlayer('defense')" class="w-6 h-6 rounded-md bg-zinc-100 hover:bg-zinc-200 text-zinc-600 flex items-center justify-center transition">
                                     <i data-lucide="minus" class="w-3 h-3"></i>
                                 </button>
-                                <button onclick="addPlayer('defense')" class="w-6 h-6 rounded-md bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition">
+                                <button onclick="addPlayer('defense')" class="w-6 h-6 rounded-md bg-red-400 hover:bg-red-500 text-white flex items-center justify-center transition">
                                     <i data-lucide="plus" class="w-3 h-3"></i>
                                 </button>
                             </div>
@@ -330,14 +354,14 @@
                         <!-- ボール -->
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-1.5">
-                                <span class="w-3 h-3 rounded-full bg-amber-500 text-white text-[8px] font-bold flex items-center justify-center shrink-0">B</span>
-                                <span class="text-[11px] md:text-xs font-semibold text-zinc-700">ボール (<span id="ball-count">1</span>)</span>
+                                <span class="w-3 h-3 rounded-full bg-amber-400 text-white text-[8px] font-bold flex items-center justify-center shrink-0">B</span>
+                                <span class="text-[11px] md:text-xs font-semibold text-zinc-600">ボール (<span id="ball-count">1</span>)</span>
                             </div>
                             <div class="flex items-center gap-1">
-                                <button onclick="removeBall()" class="w-6 h-6 rounded-md bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center transition">
+                                <button onclick="removeBall()" class="w-6 h-6 rounded-md bg-zinc-100 hover:bg-zinc-200 text-zinc-600 flex items-center justify-center transition">
                                     <i data-lucide="minus" class="w-3 h-3"></i>
                                 </button>
-                                <button onclick="addBall()" class="w-6 h-6 rounded-md bg-amber-600 hover:bg-amber-700 text-white flex items-center justify-center transition">
+                                <button onclick="addBall()" class="w-6 h-6 rounded-md bg-amber-400 hover:bg-amber-500 text-white flex items-center justify-center transition">
                                     <i data-lucide="plus" class="w-3 h-3"></i>
                                 </button>
                             </div>
@@ -345,11 +369,11 @@
                     </div>
 
                     <!-- 作戦メモ（残り高さをすべて使用） -->
-                    <div class="bg-white rounded-xl border border-zinc-200 p-2 shadow-sm flex-1 flex flex-col min-h-0">
-                        <label for="tactic-memo" class="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1 flex items-center gap-1 shrink-0">
+                    <div class="bg-white rounded-xl border border-zinc-200/80 p-2 shadow-sm flex-1 flex flex-col min-h-0">
+                        <label for="tactic-memo" class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 flex items-center gap-1 shrink-0">
                             <i data-lucide="file-text" class="w-3 h-3"></i> 作戦メモ
                         </label>
-                        <textarea id="tactic-memo" placeholder="動きのポイントや指示をメモ..." class="w-full flex-1 text-xs text-zinc-800 placeholder-zinc-400 bg-zinc-50 rounded-lg p-2 border border-zinc-200/80 focus:outline-none focus:border-zinc-400 resize-none"></textarea>
+                        <textarea id="tactic-memo" placeholder="動きのポイントや指示をメモ..." class="w-full flex-1 text-xs text-zinc-700 placeholder-zinc-400 bg-zinc-50/70 rounded-lg p-2 border border-zinc-200/70 focus:outline-none focus:border-zinc-300 resize-none"></textarea>
                     </div>
 
                 </div>
@@ -425,16 +449,86 @@
             if (tab === 'timer') {
                 timerView.classList.remove('hidden');
                 boardView.classList.add('hidden');
-                tabTimer.className = 'px-3 md:px-4 py-1 rounded-md text-xs md:text-sm font-medium transition-all bg-white text-zinc-900 shadow-sm';
-                tabBoard.className = 'px-3 md:px-4 py-1 rounded-md text-xs md:text-sm font-medium transition-all text-zinc-500 hover:text-zinc-900';
+                tabTimer.className = 'px-3 md:px-5 py-1 rounded-md text-xs md:text-sm font-semibold transition-all bg-white text-zinc-800 shadow-sm';
+                tabBoard.className = 'px-3 md:px-5 py-1 rounded-md text-xs md:text-sm font-semibold transition-all text-zinc-400 hover:text-zinc-700';
             } else {
                 timerView.classList.add('hidden');
                 boardView.classList.remove('hidden');
-                tabBoard.className = 'px-3 md:px-4 py-1 rounded-md text-xs md:text-sm font-medium transition-all bg-white text-zinc-900 shadow-sm';
-                tabTimer.className = 'px-3 md:px-4 py-1 rounded-md text-xs md:text-sm font-medium transition-all text-zinc-500 hover:text-zinc-900';
+                tabBoard.className = 'px-3 md:px-5 py-1 rounded-md text-xs md:text-sm font-semibold transition-all bg-white text-zinc-800 shadow-sm';
+                tabTimer.className = 'px-3 md:px-5 py-1 rounded-md text-xs md:text-sm font-semibold transition-all text-zinc-400 hover:text-zinc-700';
                 setTimeout(resizeCanvas, 20);
             }
         }
+
+        /* ==========================================================================
+           スコア背景色（12色：目に優しいソフトトーン）＆ 自動コントラスト調整ロジック
+        ========================================================================== */
+        const SCORE_COLORS = [
+            { name: 'ホワイト',       hex: '#FFFFFF', isDark: false },
+            { name: 'ソフトチャコール', hex: '#52525B', isDark: true },
+            { name: 'ソフトレッド',   hex: '#F87171', isDark: true },
+            { name: 'ソフトブルー',   hex: '#60A5FA', isDark: true },
+            { name: 'ミントグリーン', hex: '#4ADE80', isDark: false },
+            { name: 'パステルイエロー', hex: '#FEF08A', isDark: false },
+            { name: 'ソフトオレンジ', hex: '#FB923C', isDark: true },
+            { name: 'ラベンダー',     hex: '#A78BFA', isDark: true },
+            { name: 'ソフトピンク',   hex: '#F472B6', isDark: true },
+            { name: 'ペールスカイ',   hex: '#BAE6FD', isDark: false },
+            { name: 'スレートブルー', hex: '#64748B', isDark: true },
+            { name: 'ライトグレー',   hex: '#E4E4E7', isDark: false }
+        ];
+
+        function initColorPickers() {
+            ['home', 'guest'].forEach(team => {
+                const container = document.getElementById(`color-picker-${team}`);
+                container.innerHTML = '';
+                SCORE_COLORS.forEach(c => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.title = c.name;
+                    btn.style.backgroundColor = c.hex;
+                    btn.className = 'w-6 h-6 rounded-full border border-zinc-200 shadow-sm hover:scale-110 transition active:scale-95';
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        applyScoreCardColor(team, c);
+                        container.classList.add('hidden');
+                    };
+                    container.appendChild(btn);
+                });
+            });
+        }
+
+        function toggleColorPicker(event, team) {
+            event.stopPropagation();
+            const otherTeam = team === 'home' ? 'guest' : 'home';
+            document.getElementById(`color-picker-${otherTeam}`).classList.add('hidden');
+            const target = document.getElementById(`color-picker-${team}`);
+            target.classList.toggle('hidden');
+        }
+
+        function applyScoreCardColor(team, colorObj) {
+            const card = document.getElementById(`score-area-${team}`);
+            const inputBox = document.getElementById(`team-input-box-${team}`);
+            teamColors[team] = colorObj.hex;
+            card.style.backgroundColor = colorObj.hex;
+            card.style.color = colorObj.isDark ? '#FFFFFF' : '#3F3F46';
+            card.style.borderColor = colorObj.hex === '#FFFFFF' ? '#E4E4E7' : colorObj.hex;
+
+            if (colorObj.isDark) {
+                inputBox.classList.remove('bg-black/[0.04]', 'hover:bg-black/[0.08]');
+                inputBox.classList.add('bg-white/20', 'hover:bg-white/30');
+            } else {
+                inputBox.classList.remove('bg-white/20', 'hover:bg-white/30');
+                inputBox.classList.add('bg-black/[0.04]', 'hover:bg-black/[0.08]');
+            }
+            updatePossessionDisplay();
+        }
+
+        // 画面のどこかをクリックしたらカラーパレットを閉じる
+        window.addEventListener('click', () => {
+            document.getElementById('color-picker-home')?.classList.add('hidden');
+            document.getElementById('color-picker-guest')?.classList.add('hidden');
+        });
 
         /* ==========================================================================
            タイマー ＆ スコアボード ロジック
@@ -450,8 +544,9 @@
         const periods = ['Q1', 'Q2', 'Q3', 'Q4', 'OT'];
         let currentPeriodIndex = 0;
 
-        // ポゼッションアロー状態: 'right' (オレンジ), 'left' (黒)
+        // ポゼッションアロー状態: 'right' (右側GUESTチーム), 'left' (左側HOMEチーム)
         let possessionDirection = 'right';
+        let teamColors = { home: '#FFFFFF', guest: '#FFFFFF' };
 
         let scores = { home: 0, guest: 0 };
 
@@ -459,12 +554,22 @@
             document.getElementById('period-display').textContent = periods[currentPeriodIndex];
         }
 
+        // 少し薄いグレー背景（#71717A）上で視認しやすい矢印色を取得
+        function getArrowColorForTeam(team) {
+            const hex = teamColors[team] || '#FFFFFF';
+            // 近いグレー系（チャコール・スレート）は同化しやすいため明るめ・白に補正
+            if (hex === '#52525B' || hex === '#64748B') return '#F4F4F5';
+            return hex;
+        }
+
         function updatePossessionDisplay() {
             const container = document.getElementById('possession-display');
             if (possessionDirection === 'right') {
-                container.innerHTML = '<i data-lucide="arrow-right" class="w-6 h-6 md:w-7 md:h-7 text-amber-500 stroke-[2.5]"></i>';
+                const color = getArrowColorForTeam('guest');
+                container.innerHTML = `<i data-lucide="arrow-right" style="color: ${color};" class="w-7 h-7 md:w-8 md:h-8 stroke-[2.5]"></i>`;
             } else {
-                container.innerHTML = '<i data-lucide="arrow-left" class="w-6 h-6 md:w-7 md:h-7 text-zinc-900 stroke-[2.5]"></i>';
+                const color = getArrowColorForTeam('home');
+                container.innerHTML = `<i data-lucide="arrow-left" style="color: ${color};" class="w-7 h-7 md:w-8 md:h-8 stroke-[2.5]"></i>`;
             }
             lucide.createIcons();
         }
@@ -498,8 +603,8 @@
         function updateShotClockDisplay() {
             const el = document.getElementById('shot-clock-display');
             el.textContent = String(shotSeconds).padStart(2, '0');
-            el.classList.toggle('text-red-600', shotSeconds <= 5);
-            el.classList.toggle('text-amber-600', shotSeconds > 5);
+            el.classList.toggle('text-red-400', shotSeconds <= 5);
+            el.classList.toggle('text-amber-400', shotSeconds > 5);
         }
 
         function toggleMainTimer() {
@@ -508,12 +613,12 @@
                 clearInterval(mainInterval);
                 isMainRunning = false;
                 badge.textContent = 'STOPPED';
-                badge.className = 'px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-600';
+                badge.className = 'px-2 py-0.5 rounded-full bg-zinc-600 text-zinc-200 text-[9px] md:text-xs';
             } else {
                 if (mainSeconds <= 0) return;
                 isMainRunning = true;
                 badge.textContent = 'RUNNING';
-                badge.className = 'px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+                badge.className = 'px-2 py-0.5 rounded-full bg-emerald-400 text-zinc-900 text-[9px] md:text-xs font-bold';
                 mainInterval = setInterval(() => {
                     if (mainSeconds > 0) {
                         mainSeconds--;
@@ -567,12 +672,12 @@
                 clearInterval(shotInterval);
                 isShotRunning = false;
                 badge.textContent = 'STOPPED';
-                badge.className = 'px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-600';
+                badge.className = 'px-2 py-0.5 rounded-full bg-zinc-600 text-zinc-200 text-[9px] md:text-xs shrink-0';
             } else {
                 if (shotSeconds <= 0) return;
                 isShotRunning = true;
                 badge.textContent = 'RUNNING';
-                badge.className = 'px-2 py-0.5 rounded-full bg-amber-100 text-amber-700';
+                badge.className = 'px-2 py-0.5 rounded-full bg-amber-400 text-zinc-900 text-[9px] md:text-xs font-bold shrink-0';
                 shotInterval = setInterval(() => {
                     if (shotSeconds > 0) {
                         shotSeconds--;
@@ -650,7 +755,7 @@
 
             let isMouseDown = false;
             element.addEventListener('mousedown', (e) => {
-                if (e.target.tagName === 'INPUT') return;
+                if (e.target.tagName === 'INPUT' || e.target.closest('button')) return;
                 isMouseDown = true;
                 startX = e.clientX;
                 startY = e.clientY;
@@ -828,7 +933,7 @@
         const canvas = document.getElementById('drawing-canvas');
         const ctx = canvas.getContext('2d');
 
-        // ご提示いただいた「コート理想_3.jpeg」と全く同じレイアウト・木目背景の画像を生成して読み込ませる
+        // ご提示いただいた「コート理想_3.jpeg」と全く同じレイアウト・少し淡く優しい木目背景の画像を生成
         function generateIdealCourtImage() {
             const c = document.createElement('canvas');
             const W = 1252;
@@ -840,16 +945,16 @@
             const plankCount = 13;
             const plankH = H / plankCount;
             const plankColors = [
-                '#D59E63', '#CE9558', '#DFAA70', '#C78E52', '#D9A267',
-                '#D1975A', '#DFAA70', '#D49C61', '#CA9054', '#DFAA70',
-                '#C18447', '#D69E63', '#CE9558'
+                '#E5BE92', '#DFB688', '#ECC79C', '#D9B082', '#E8C195',
+                '#E1B88A', '#ECC79C', '#E4BD90', '#DCB385', '#ECC79C',
+                '#D5AA7B', '#E6BE92', '#DFB688'
             ];
             for (let i = 0; i < plankCount; i++) {
                 g.fillStyle = plankColors[i % plankColors.length];
                 g.fillRect(0, i * plankH, W, plankH + 1);
-                g.fillStyle = 'rgba(120, 70, 20, 0.16)';
+                g.fillStyle = 'rgba(140, 90, 40, 0.11)';
                 g.fillRect(0, i * plankH, W, 1.5);
-                g.fillStyle = 'rgba(130, 75, 25, 0.08)';
+                g.fillStyle = 'rgba(140, 90, 40, 0.05)';
                 for (let j = 0; j < 6; j++) {
                     const rx = ((i * 197 + j * 311) % (W - 180));
                     const rw = 80 + ((i * 53 + j * 97) % 140);
@@ -1071,13 +1176,13 @@
                 el.style.pointerEvents = currentTool === 'move' ? 'auto' : 'none';
 
                 if (p.type === 'ball') {
-                    el.className = 'player-token absolute w-6 h-6 md:w-8 md:h-8 rounded-full bg-amber-500 text-white border-2 border-white flex items-center justify-center font-bold text-[10px] md:text-xs shadow-md';
+                    el.className = 'player-token absolute w-6 h-6 md:w-8 md:h-8 rounded-full bg-amber-400 text-white border-2 border-white flex items-center justify-center font-bold text-[10px] md:text-xs shadow-md';
                     el.textContent = 'B';
                 } else {
                     el.className = `player-token absolute w-7 h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-xs md:text-base shadow-md ${
                         p.type === 'offense' 
-                            ? 'bg-zinc-900 text-white border-2 border-white' 
-                            : 'bg-white text-red-600 border-2 border-red-600'
+                            ? 'bg-zinc-700 text-white border-2 border-white' 
+                            : 'bg-white text-red-500 border-2 border-red-400'
                     }`;
                     el.textContent = p.label;
                 }
@@ -1138,22 +1243,22 @@
         let isDrawing = false;
         let lastX = 0;
         let lastY = 0;
-        let currentPenColor = '#18181B'; // デフォルトは黒
+        let currentPenColor = '#3F3F46'; // デフォルトは少し柔らかなチャコール
 
         function setPenColor(color) {
             currentPenColor = color;
             const btnBlack = document.getElementById('pen-color-black');
             const btnRed = document.getElementById('pen-color-red');
-            if (color === '#18181B') {
-                btnBlack.classList.add('ring-2', 'ring-offset-1', 'ring-zinc-400');
-                btnBlack.classList.remove('ring-1', 'ring-zinc-300');
-                btnRed.classList.remove('ring-2', 'ring-offset-1', 'ring-red-400');
-                btnRed.classList.add('ring-1', 'ring-zinc-300');
+            if (color === '#3F3F46') {
+                btnBlack.classList.add('ring-2', 'ring-offset-1', 'ring-zinc-300');
+                btnBlack.classList.remove('ring-1', 'ring-zinc-200');
+                btnRed.classList.remove('ring-2', 'ring-offset-1', 'ring-red-300');
+                btnRed.classList.add('ring-1', 'ring-zinc-200');
             } else {
-                btnRed.classList.add('ring-2', 'ring-offset-1', 'ring-red-400');
-                btnRed.classList.remove('ring-1', 'ring-zinc-300');
-                btnBlack.classList.remove('ring-2', 'ring-offset-1', 'ring-zinc-400');
-                btnBlack.classList.add('ring-1', 'ring-zinc-300');
+                btnRed.classList.add('ring-2', 'ring-offset-1', 'ring-red-300');
+                btnRed.classList.remove('ring-1', 'ring-zinc-200');
+                btnBlack.classList.remove('ring-2', 'ring-offset-1', 'ring-zinc-300');
+                btnBlack.classList.add('ring-1', 'ring-zinc-200');
             }
         }
 
@@ -1162,9 +1267,9 @@
             ['move', 'pen', 'eraser'].forEach(t => {
                 const btn = document.getElementById(`tool-${t}`);
                 if (t === tool) {
-                    btn.className = 'flex-1 py-1 px-1.5 rounded-md text-[11px] md:text-xs font-medium bg-white text-zinc-900 shadow-sm flex items-center justify-center gap-1';
+                    btn.className = 'flex-1 py-1 px-1.5 rounded-md text-[11px] md:text-xs font-medium bg-white text-zinc-800 shadow-sm flex items-center justify-center gap-1';
                 } else {
-                    btn.className = 'flex-1 py-1 px-1.5 rounded-md text-[11px] md:text-xs font-medium text-zinc-600 hover:text-zinc-900 flex items-center justify-center gap-1';
+                    btn.className = 'flex-1 py-1 px-1.5 rounded-md text-[11px] md:text-xs font-medium text-zinc-500 hover:text-zinc-800 flex items-center justify-center gap-1';
                 }
             });
 
@@ -1262,6 +1367,7 @@
 
         // 初期セットアップ
         window.addEventListener('DOMContentLoaded', () => {
+            initColorPickers();
             generateIdealCourtImage();
             initPlayers();
             resizeCanvas();
