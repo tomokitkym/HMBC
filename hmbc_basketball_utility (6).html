@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HMBC - Basketball Utility</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FAFAFA;
+            color: #18181B;
+            overscroll-behavior: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .font-mono-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+        .swipe-area {
+            touch-action: none;
+            transition: transform 0.1s ease, background-color 0.15s ease;
+        }
+        .swipe-area:active {
+            transform: scale(0.99);
+        }
+        .player-token {
+            touch-action: none;
+            cursor: grab;
+            transition: box-shadow 0.15s ease;
+        }
+        .player-token:active {
+            cursor: grabbing;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            z-index: 50;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #E4E4E7;
+            border-radius: 9999px;
+        }
+        /* スマホ縦向き時の横画面推奨オーバーレイ */
+        @media screen and (max-width: 767px) and (orientation: portrait) {
+            #rotate-device-overlay {
+                display: flex !important;
+            }
+        }
+        /* スマホ（高さが低い画面・幅767px以下）用の超コンパクト調整 */
+        @media screen and (max-width: 767px) {
+            html {
+                font-size: 7px;
+            }
+            body {
+                zoom: 0.5;
+                -moz-transform: scale(0.5);
+                -moz-transform-origin: top center;
+                max-height: 100dvh;
+                overflow: hidden;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- スマホ縦画面時の案内オーバーレイ -->
+    <div id="rotate-device-overlay" class="hidden fixed inset-0 z-50 bg-zinc-900/95 backdrop-blur-sm text-white flex-col items-center justify-center p-6 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-zinc-800 border border-zinc-700 flex items-center justify-center mb-4 animate-bounce">
+            <i data-lucide="smartphone" class="w-8 h-8 text-amber-500 rotate-90"></i>
+        </div>
+        <h2 class="text-xl font-bold mb-2">横画面にしてご利用ください</h2>
+        <p class="text-sm text-zinc-400 max-w-xs leading-relaxed">
+            タイマーやスコアボード、作戦盤をパソコン版と同じレイアウトで快適にお使いいただくため、端末を横向きに回転させてください。
+        </p>
+        <button onclick="document.getElementById('rotate-device-overlay').style.setProperty('display', 'none', 'important')" class="mt-6 px-4 py-2 rounded-xl bg-zinc-800 text-zinc-400 text-xs hover:text-white border border-zinc-700 transition">
+            このまま表示する
+        </button>
+    </div>
+
+    <!-- ヘッダー -->
+    <header class="bg-white border-b border-zinc-200 sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-2 sm:px-4 h-7 md:h-14 flex items-center justify-between">
+            <div class="flex items-center gap-1 md:gap-2">
+                <div class="w-5 h-5 md:w-8 md:h-8 rounded-md md:rounded-lg bg-zinc-900 text-white flex items-center justify-center font-bold text-[9px] md:text-sm tracking-tighter">
+                    HM
+                </div>
+                <span class="font-bold text-zinc-900 tracking-tight text-xs md:text-lg">HMBC</span>
+            </div>
+
+            <!-- タブ切り替え（ミニマル・セグメントコントロール） -->
+            <nav class="flex bg-zinc-100 p-0.5 md:p-1 rounded-md md:rounded-xl">
+                <button id="tab-timer" onclick="switchTab('timer')" class="px-2 md:px-4 py-0.5 md:py-1.5 rounded md:rounded-lg text-[10px] md:text-sm font-medium transition-all bg-white text-zinc-900 shadow-sm">
+                    タイマー・得点
+                </button>
+                <button id="tab-board" onclick="switchTab('board')" class="px-2 md:px-4 py-0.5 md:py-1.5 rounded md:rounded-lg text-[10px] md:text-sm font-medium transition-all text-zinc-500 hover:text-zinc-900">
+                    作戦盤
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="flex-1 max-w-5xl w-full mx-auto p-1 md:p-4 flex flex-col">
+
+        <!-- ==========================================
+             1. タイマー & スコアボード画面
+        ========================================== -->
+        <section id="view-timer" class="flex-1 flex flex-col justify-between gap-1 md:gap-4 py-0 md:py-2">
+            
+            <!-- 上段：メインタイマー・24秒ショットクロック（横画面・PC共通で横並び） -->
+            <div class="grid grid-cols-12 gap-1 md:gap-4">
+                
+                <!-- メインタイマー (8カラム分) -->
+                <div class="col-span-8 bg-white rounded-lg md:rounded-3xl border border-zinc-200 p-1.5 md:p-6 flex flex-col items-center justify-between shadow-sm relative overflow-hidden">
+                    <div class="w-full flex justify-between items-center text-[8px] md:text-xs font-medium text-zinc-400">
+                        <span class="flex items-center gap-0.5 md:gap-1"><i data-lucide="clock" class="w-2 h-2 md:w-3.5 md:h-3.5"></i> GAME CLOCK</span>
+                        <span id="timer-status-badge" class="px-1 md:px-2 py-0 md:py-0.5 rounded-full bg-zinc-100 text-zinc-600">STOPPED</span>
+                    </div>
+
+                    <!-- タップ＆スワイプ対応タイマー表示 -->
+                    <div id="main-timer-area" class="swipe-area w-full my-0 md:my-4 py-0.5 md:py-6 rounded md:rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-50 select-none" title="タップで開始/停止、停止中に上下スワイプ(または矢印キー)で秒数調整">
+                        <div id="main-timer-display" class="font-mono-num text-3xl md:text-7xl lg:text-8xl font-bold tracking-tight text-zinc-900 leading-none">
+                            05:00
+                        </div>
+                        <p class="hidden md:block text-xs text-zinc-400 mt-2">タップで開始/停止 • 停止中に上下スワイプで秒調整</p>
+                    </div>
+
+                    <!-- 下部コントロール：1分プラス・マイナスボタン -->
+                    <div class="w-full flex items-center justify-center gap-1 md:gap-2 flex-wrap">
+                        <button onclick="subOneMinute()" class="px-2 py-0.5 md:px-4 md:py-2.5 rounded md:rounded-xl bg-zinc-100 text-zinc-700 text-[10px] md:text-sm font-medium hover:bg-zinc-200 active:scale-95 transition flex items-center gap-0.5 md:gap-1 shadow-sm">
+                            <i data-lucide="minus" class="w-2.5 h-2.5 md:w-4 md:h-4"></i> 1分
+                        </button>
+                        <button onclick="addOneMinute()" class="px-2 py-0.5 md:px-4 md:py-2.5 rounded md:rounded-xl bg-zinc-900 text-white text-[10px] md:text-sm font-medium hover:bg-zinc-800 active:scale-95 transition flex items-center gap-0.5 md:gap-1 shadow-sm">
+                            <i data-lucide="plus" class="w-2.5 h-2.5 md:w-4 md:h-4"></i> 1分
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 24秒ショットクロック (4カラム分) -->
+                <div class="col-span-4 bg-white rounded-lg md:rounded-3xl border border-zinc-200 p-1.5 md:p-6 flex flex-col items-center justify-between shadow-sm">
+                    <div class="w-full flex justify-between items-center text-[8px] md:text-xs font-medium text-zinc-400">
+                        <span>SHOT CLOCK</span>
+                        <span id="shot-status-badge" class="px-1 md:px-2 py-0 md:py-0.5 rounded-full bg-zinc-100 text-zinc-600">STOPPED</span>
+                    </div>
+
+                    <div id="shot-clock-area" class="swipe-area w-full my-0 md:my-4 py-0.5 md:py-4 rounded md:rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-50 transition select-none" title="タップで開始/停止、停止中に上下スワイプ(または矢印キー)で秒数調整">
+                        <div id="shot-clock-display" class="font-mono-num text-3xl md:text-6xl lg:text-7xl font-bold text-amber-600 leading-none">
+                            24
+                        </div>
+                        <p class="hidden md:block text-[11px] text-zinc-400 mt-2 text-center">タップで開始/停止 • 上下スワイプ調整</p>
+                    </div>
+
+                    <div class="w-full grid grid-cols-2 gap-1 md:gap-2">
+                        <button onclick="resetShotClock(24)" class="py-0.5 md:py-2.5 rounded md:rounded-xl bg-zinc-900 text-white text-[10px] md:text-sm font-semibold hover:bg-zinc-800 active:scale-95 transition">
+                            24s
+                        </button>
+                        <button onclick="resetShotClock(14)" class="py-0.5 md:py-2.5 rounded md:rounded-xl bg-zinc-100 text-zinc-800 text-[10px] md:text-sm font-semibold hover:bg-zinc-200 active:scale-95 transition">
+                            14s
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 下段：スコアボード（ホーム・ピリオド・ゲスト：横画面・PC共通で3列横並び） -->
+            <div class="grid grid-cols-12 gap-1 md:gap-4 flex-1 min-h-[82px] md:min-h-[220px]">
+                
+                <!-- HOME チーム (5カラム分) -->
+                <div id="score-area-home" tabindex="0" class="swipe-area col-span-5 bg-white rounded-lg md:rounded-3xl border border-zinc-200 p-1.5 md:p-6 flex flex-col items-center justify-between shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-ns-resize">
+                    <div class="w-full flex justify-between items-center gap-1 md:gap-2">
+                        <div class="flex items-center gap-1 flex-1 min-w-0 bg-zinc-50 hover:bg-zinc-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-zinc-900 px-1 py-0 md:px-2.5 md:py-1 rounded md:rounded-lg border border-zinc-200/80 transition">
+                            <i data-lucide="pencil" class="w-2 h-2 md:w-3 md:h-3 text-zinc-400 shrink-0"></i>
+                            <input type="text" id="team-name-home" value="HOME" placeholder="チーム名" aria-label="ホームチーム名" class="font-bold text-zinc-800 text-[10px] md:text-sm tracking-wide bg-transparent focus:outline-none w-full min-w-0">
+                        </div>
+                        <span class="w-1.5 h-1.5 md:w-2.5 md:h-2.5 rounded-full bg-zinc-900 shrink-0"></span>
+                    </div>
+                    
+                    <div id="score-display-home" class="font-mono-num text-3xl md:text-7xl lg:text-8xl font-bold text-zinc-900 my-0 md:my-2 leading-none">
+                        0
+                    </div>
+
+                    <div class="text-[8px] md:text-[11px] text-zinc-400 text-center flex items-center gap-0.5 md:gap-1">
+                        <i data-lucide="arrow-up-down" class="w-2 h-2 md:w-3 md:h-3"></i> 上下スワイプで得点
+                    </div>
+                </div>
+
+                <!-- ピリオド ＆ ポゼッションアロー表示 (2カラム分) -->
+                <div id="period-area" tabindex="0" class="swipe-area col-span-2 bg-white rounded-lg md:rounded-3xl border border-zinc-200 p-1 md:p-3 flex flex-col items-center justify-between shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-ns-resize h-full">
+                    <!-- 上部：ピリオド表示 -->
+                    <div class="w-full flex-1 flex flex-col items-center justify-center cursor-ns-resize" title="上下スワイプでピリオド切替">
+                        <span class="text-[7px] md:text-[10px] font-semibold text-zinc-400 tracking-wider mb-0 md:mb-1">PERIOD</span>
+                        <span id="period-display" class="font-mono-num text-base md:text-3xl lg:text-4xl font-bold text-zinc-900 leading-none">Q1</span>
+                    </div>
+
+                    <div class="w-full h-px bg-zinc-100 my-0.5 md:my-1"></div>
+
+                    <!-- 下部：ポゼッションアロー -->
+                    <div id="possession-area" onclick="togglePossession()" class="w-full flex-1 flex flex-col items-center justify-center cursor-pointer py-0 md:py-1 rounded md:rounded-xl hover:bg-zinc-50 active:scale-95 transition select-none" title="タップ（クリック）でポゼッション方向を変更">
+                        <span class="text-[6px] md:text-[9px] font-semibold text-zinc-400 tracking-wider mb-0 md:mb-1">POSSESSION</span>
+                        <div id="possession-display" class="flex items-center justify-center h-4 md:h-8 transition-transform duration-150">
+                            <!-- デフォルト右向きオレンジ矢印 -->
+                            <i data-lucide="arrow-right" class="w-4 h-4 md:w-7 md:h-7 text-amber-500 stroke-[2.5]"></i>
+                        </div>
+                        <span class="hidden md:inline text-[9px] text-zinc-400 leading-none mt-1">タップで切替</span>
+                    </div>
+                </div>
+
+                <!-- GUEST チーム (5カラム分) -->
+                <div id="score-area-guest" tabindex="0" class="swipe-area col-span-5 bg-white rounded-lg md:rounded-3xl border border-zinc-200 p-1.5 md:p-6 flex flex-col items-center justify-between shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-ns-resize">
+                    <div class="w-full flex justify-between items-center gap-1 md:gap-2">
+                        <div class="flex items-center gap-1 flex-1 min-w-0 bg-zinc-50 hover:bg-zinc-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-zinc-900 px-1 py-0 md:px-2.5 md:py-1 rounded md:rounded-lg border border-zinc-200/80 transition">
+                            <i data-lucide="pencil" class="w-2 h-2 md:w-3 md:h-3 text-zinc-400 shrink-0"></i>
+                            <input type="text" id="team-name-guest" value="GUEST" placeholder="チーム名" aria-label="ゲストチーム名" class="font-bold text-zinc-800 text-[10px] md:text-sm tracking-wide bg-transparent focus:outline-none w-full min-w-0">
+                        </div>
+                        <span class="w-1.5 h-1.5 md:w-2.5 md:h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+                    </div>
+                    
+                    <div id="score-display-guest" class="font-mono-num text-3xl md:text-7xl lg:text-8xl font-bold text-zinc-900 my-0 md:my-2 leading-none">
+                        0
+                    </div>
+
+                    <div class="text-[8px] md:text-[11px] text-zinc-400 text-center flex items-center gap-0.5 md:gap-1">
+                        <i data-lucide="arrow-up-down" class="w-2 h-2 md:w-3 md:h-3"></i> 上下スワイプで得点
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 最下部：全体リセット（タイマー・24秒・得点） -->
+            <div class="w-full flex justify-center pt-0 md:pt-1">
+                <button onclick="resetAllGame()" class="w-auto px-3 py-1 md:px-6 md:py-3 rounded-lg md:rounded-2xl bg-red-50 text-red-600 border border-red-200 text-[10px] md:text-sm font-semibold hover:bg-red-100 active:scale-95 transition flex items-center justify-center gap-1 md:gap-2 shadow-sm">
+                    <i data-lucide="rotate-ccw" class="w-2.5 h-2.5 md:w-4 md:h-4"></i> タイマーリセット（タイマー・24秒・得点）
+                </button>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             2. 作戦盤画面
+        ========================================== -->
+        <section id="view-board" class="hidden flex-1 flex flex-col gap-0.5 md:gap-4 py-0 md:py-2 max-h-full overflow-hidden">
+            
+            <!-- 作戦名 ＆ ツールバー -->
+            <div class="bg-white rounded-lg md:rounded-2xl border border-zinc-200 p-0.5 md:p-3 flex flex-wrap items-center justify-between gap-1 md:gap-3 shadow-sm shrink-0">
+                <!-- 作戦名入力 -->
+                <div class="flex items-center gap-1 flex-1 min-w-[120px] md:min-w-[200px]">
+                    <i data-lucide="clipboard-list" class="w-3 h-3 md:w-4 md:h-4 text-zinc-400 shrink-0"></i>
+                    <input type="text" id="tactic-name" placeholder="作戦名を入力（例：ホーンセット）" class="w-full text-[10px] md:text-sm font-medium text-zinc-900 placeholder-zinc-400 bg-transparent focus:outline-none">
+                </div>
+
+                <!-- 描画ツール切り替え -->
+                <div class="flex items-center gap-0.5 md:gap-1.5 bg-zinc-100 p-0.5 md:p-1 rounded md:rounded-xl">
+                    <button id="tool-move" onclick="setBoardTool('move')" class="px-1.5 py-0.5 md:p-2 rounded md:rounded-lg text-[10px] md:text-xs font-medium bg-white text-zinc-900 shadow-sm flex items-center gap-0.5 md:gap-1" title="選手・ボール移動">
+                        <i data-lucide="hand" class="w-2.5 h-2.5 md:w-4 md:h-4"></i><span>移動</span>
+                    </button>
+                    <!-- ペン選択時に色選択を表示するラッパー -->
+                    <div id="pen-tool-wrapper" class="flex items-center gap-1">
+                        <button id="tool-pen" onclick="setBoardTool('pen')" class="px-1.5 py-0.5 md:p-2 rounded md:rounded-lg text-[10px] md:text-xs font-medium text-zinc-600 hover:text-zinc-900 flex items-center gap-0.5 md:gap-1" title="線を描く">
+                            <i data-lucide="pen-tool" class="w-2.5 h-2.5 md:w-4 md:h-4"></i><span>ペン</span>
+                        </button>
+                        <!-- ペンの色選択ボタン -->
+                        <button id="pen-color-black" onclick="setPenColor('#18181B')" class="w-3.5 h-3.5 md:w-5 md:h-5 rounded-full bg-zinc-900 border-2 border-white shadow-sm ring-1 ring-zinc-300 hidden" title="黒ペン"></button>
+                        <button id="pen-color-red" onclick="setPenColor('#DC2626')" class="w-3.5 h-3.5 md:w-5 md:h-5 rounded-full bg-red-600 border-2 border-white shadow-sm ring-1 ring-zinc-300 hidden" title="赤ペン"></button>
+                    </div>
+                    <button id="tool-eraser" onclick="setBoardTool('eraser')" class="px-1.5 py-0.5 md:p-2 rounded md:rounded-lg text-[10px] md:text-xs font-medium text-zinc-600 hover:text-zinc-900 flex items-center gap-0.5 md:gap-1" title="線を消す">
+                        <i data-lucide="eraser" class="w-2.5 h-2.5 md:w-4 md:h-4"></i><span>消しゴム</span>
+                    </button>
+                    <div class="w-px h-3 md:h-4 bg-zinc-300 mx-0.5"></div>
+                    <button onclick="clearLines()" class="px-1.5 py-0.5 md:p-2 rounded md:rounded-lg text-[10px] md:text-xs font-medium text-red-600 hover:bg-red-50 flex items-center gap-0.5 md:gap-1" title="線をすべて消す">
+                        <i data-lucide="trash-2" class="w-2.5 h-2.5 md:w-4 md:h-4"></i><span>線全消去</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 選手・ボール追加・削除コントロール（横画面・PC共通で3列横並び） -->
+            <div class="grid grid-cols-3 gap-0.5 md:gap-3 shrink-0">
+                <!-- オフェンス操作 -->
+                <div class="bg-white rounded-lg md:rounded-2xl border border-zinc-200 px-1.5 py-0.5 md:px-4 md:py-2.5 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center gap-1 md:gap-2">
+                        <span class="w-2 h-2 md:w-3 md:h-3 rounded-full bg-zinc-900 shrink-0"></span>
+                        <span class="text-[9px] md:text-xs font-semibold text-zinc-700 truncate">オフェンス (<span id="offense-count">5</span>)</span>
+                    </div>
+                    <div class="flex items-center gap-1 md:gap-1.5 shrink-0">
+                        <button onclick="removePlayer('offense')" class="w-4 h-4 md:w-7 md:h-7 rounded md:rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center transition" title="削除">
+                            <i data-lucide="minus" class="w-2 h-2 md:w-3.5 md:h-3.5"></i>
+                        </button>
+                        <button onclick="addPlayer('offense')" class="w-4 h-4 md:w-7 md:h-7 rounded md:rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white flex items-center justify-center transition" title="追加">
+                            <i data-lucide="plus" class="w-2 h-2 md:w-3.5 md:h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ディフェンス操作 -->
+                <div class="bg-white rounded-lg md:rounded-2xl border border-zinc-200 px-2 py-1 md:px-4 md:py-2.5 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center gap-1 md:gap-2">
+                        <span class="w-2 h-2 md:w-3 md:h-3 rounded-full bg-white border-2 border-red-600 shrink-0"></span>
+                        <span class="text-[9px] md:text-xs font-semibold text-zinc-700 truncate">ディフェンス (<span id="defense-count">5</span>)</span>
+                    </div>
+                    <div class="flex items-center gap-1 md:gap-1.5 shrink-0">
+                        <button onclick="removePlayer('defense')" class="w-4 h-4 md:w-7 md:h-7 rounded md:rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center transition" title="削除">
+                            <i data-lucide="minus" class="w-2 h-2 md:w-3.5 md:h-3.5"></i>
+                        </button>
+                        <button onclick="addPlayer('defense')" class="w-4 h-4 md:w-7 md:h-7 rounded md:rounded-lg bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition" title="追加">
+                            <i data-lucide="plus" class="w-2 h-2 md:w-3.5 md:h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ボール操作 -->
+                <div class="bg-white rounded-lg md:rounded-2xl border border-zinc-200 px-2 py-1 md:px-4 md:py-2.5 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center gap-1 md:gap-2">
+                        <span class="w-2.5 h-2.5 md:w-4 md:h-4 rounded-full bg-amber-500 text-white text-[7px] md:text-[10px] font-bold flex items-center justify-center shrink-0">B</span>
+                        <span class="text-[9px] md:text-xs font-semibold text-zinc-700 truncate">ボール (<span id="ball-count">1</span>)</span>
+                    </div>
+                    <div class="flex items-center gap-1 md:gap-1.5 shrink-0">
+                        <button onclick="removeBall()" class="w-4 h-4 md:w-7 md:h-7 rounded md:rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center transition" title="ボール削除">
+                            <i data-lucide="minus" class="w-2 h-2 md:w-3.5 md:h-3.5"></i>
+                        </button>
+                        <button onclick="addBall()" class="w-4 h-4 md:w-7 md:h-7 rounded md:rounded-lg bg-amber-600 hover:bg-amber-700 text-white flex items-center justify-center transition" title="ボール追加">
+                            <i data-lucide="plus" class="w-2 h-2 md:w-3.5 md:h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- コートエリア（スマホ横画面でもスクロールなしで全体が収まる高さ制限付き） -->
+            <div class="relative w-full max-w-[210px] sm:max-w-[240px] md:max-w-none mx-auto bg-white rounded-lg md:rounded-2xl border border-zinc-200 p-0.5 md:p-2 shadow-sm overflow-hidden shrink-0">
+                <div id="court-container" class="relative w-full aspect-[626/400] max-h-[135px] md:max-h-none rounded md:rounded-xl overflow-hidden select-none bg-cover bg-center">
+                    <!-- 手書き線描画用キャンバス -->
+                    <canvas id="drawing-canvas" class="absolute inset-0 w-full h-full z-10"></canvas>
+
+                    <!-- 選手・ボールマーカー配置レイヤー -->
+                    <div id="players-layer" class="absolute inset-0 z-20 pointer-events-none"></div>
+                </div>
+            </div>
+
+            <!-- 作戦メモ -->
+            <div class="bg-white rounded-lg md:rounded-2xl border border-zinc-200 p-1 md:p-4 shadow-sm flex-1 flex flex-col min-h-0">
+                <label for="tactic-memo" class="text-[7px] md:text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-0.5 md:mb-2 flex items-center gap-1 md:gap-1.5">
+                    <i data-lucide="file-text" class="w-2 h-2 md:w-3.5 md:h-3.5"></i> 作戦メモ
+                </label>
+                <textarea id="tactic-memo" rows="1" placeholder="動きのポイントや指示をメモ..." class="w-full flex-1 text-[9px] md:text-sm text-zinc-800 placeholder-zinc-400 bg-zinc-50 rounded md:rounded-xl p-0.5 md:p-3 border border-zinc-200/80 focus:outline-none focus:border-zinc-400 resize-none"></textarea>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        // アイコン初期化
+        lucide.createIcons();
+
+        /* ==========================================================================
+           ブザー音（Web Audio API）
+        ========================================================================== */
+        function playBuzzer() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.8);
+            } catch (e) {
+                console.log('Audio playback prevented or not supported', e);
+            }
+        }
+
+        /* ==========================================================================
+           タブ切り替えロジック
+        ========================================================================== */
+        function switchTab(tab) {
+            const timerView = document.getElementById('view-timer');
+            const boardView = document.getElementById('view-board');
+            const tabTimer = document.getElementById('tab-timer');
+            const tabBoard = document.getElementById('tab-board');
+
+            if (tab === 'timer') {
+                timerView.classList.remove('hidden');
+                boardView.classList.add('hidden');
+                tabTimer.className = 'px-4 py-1.5 rounded-lg text-sm font-medium transition-all bg-white text-zinc-900 shadow-sm';
+                tabBoard.className = 'px-4 py-1.5 rounded-lg text-sm font-medium transition-all text-zinc-500 hover:text-zinc-900';
+            } else {
+                timerView.classList.add('hidden');
+                boardView.classList.remove('hidden');
+                tabBoard.className = 'px-4 py-1.5 rounded-lg text-sm font-medium transition-all bg-white text-zinc-900 shadow-sm';
+                tabTimer.className = 'px-4 py-1.5 rounded-lg text-sm font-medium transition-all text-zinc-500 hover:text-zinc-900';
+                resizeCanvas();
+            }
+        }
+
+        /* ==========================================================================
+           タイマー ＆ スコアボード ロジック
+        ========================================================================== */
+        let mainSeconds = 300; // 初期設定 5分
+        let isMainRunning = false;
+        let mainInterval = null;
+
+        let shotSeconds = 24;
+        let isShotRunning = false;
+        let shotInterval = null;
+
+        const periods = ['Q1', 'Q2', 'Q3', 'Q4', 'OT'];
+        let currentPeriodIndex = 0;
+
+        // ポゼッションアロー状態: 'right' (オレンジ), 'left' (黒)
+        let possessionDirection = 'right';
+
+        let scores = { home: 0, guest: 0 };
+
+        function updatePeriodDisplay() {
+            document.getElementById('period-display').textContent = periods[currentPeriodIndex];
+        }
+
+        function updatePossessionDisplay() {
+            const container = document.getElementById('possession-display');
+            if (possessionDirection === 'right') {
+                container.innerHTML = '<i data-lucide="arrow-right" class="w-6 h-6 md:w-7 md:h-7 text-amber-500 stroke-[2.5]"></i>';
+            } else {
+                container.innerHTML = '<i data-lucide="arrow-left" class="w-6 h-6 md:w-7 md:h-7 text-zinc-900 stroke-[2.5]"></i>';
+            }
+            lucide.createIcons();
+        }
+
+        function togglePossession() {
+            possessionDirection = possessionDirection === 'right' ? 'left' : 'right';
+            updatePossessionDisplay();
+        }
+
+        function setPossession(dir) {
+            possessionDirection = dir;
+            updatePossessionDisplay();
+        }
+
+        function changePeriod(delta) {
+            currentPeriodIndex = (currentPeriodIndex + delta + periods.length) % periods.length;
+            updatePeriodDisplay();
+        }
+
+        function nextPeriod() {
+            changePeriod(1);
+        }
+
+        function updateMainTimerDisplay() {
+            const mins = Math.floor(mainSeconds / 60);
+            const secs = mainSeconds % 60;
+            document.getElementById('main-timer-display').textContent = 
+                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function updateShotClockDisplay() {
+            const el = document.getElementById('shot-clock-display');
+            el.textContent = String(shotSeconds).padStart(2, '0');
+            el.classList.toggle('text-red-600', shotSeconds <= 5);
+            el.classList.toggle('text-amber-600', shotSeconds > 5);
+        }
+
+        function toggleMainTimer() {
+            const badge = document.getElementById('timer-status-badge');
+            if (isMainRunning) {
+                clearInterval(mainInterval);
+                isMainRunning = false;
+                badge.textContent = 'STOPPED';
+                badge.className = 'px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-600';
+            } else {
+                if (mainSeconds <= 0) return;
+                isMainRunning = true;
+                badge.textContent = 'RUNNING';
+                badge.className = 'px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+                mainInterval = setInterval(() => {
+                    if (mainSeconds > 0) {
+                        mainSeconds--;
+                        updateMainTimerDisplay();
+                        if (mainSeconds === 0) {
+                            playBuzzer();
+                            toggleMainTimer();
+                        }
+                    } else {
+                        toggleMainTimer();
+                    }
+                }, 1000);
+            }
+        }
+
+        function addOneMinute() {
+            mainSeconds += 60;
+            updateMainTimerDisplay();
+        }
+
+        function subOneMinute() {
+            mainSeconds = Math.max(0, mainSeconds - 60);
+            updateMainTimerDisplay();
+        }
+
+        function resetAllGame() {
+            // メインタイマーのリセット
+            if (isMainRunning) toggleMainTimer();
+            mainSeconds = 300;
+            updateMainTimerDisplay();
+
+            // 24秒ショットクロックのリセット
+            if (isShotRunning) toggleShotClock();
+            shotSeconds = 24;
+            updateShotClockDisplay();
+
+            // ピリオドのリセット
+            currentPeriodIndex = 0;
+            updatePeriodDisplay();
+
+            // 両チーム得点のリセット
+            scores.home = 0;
+            scores.guest = 0;
+            document.getElementById('score-display-home').textContent = '0';
+            document.getElementById('score-display-guest').textContent = '0';
+        }
+
+        function toggleShotClock() {
+            const badge = document.getElementById('shot-status-badge');
+            if (isShotRunning) {
+                clearInterval(shotInterval);
+                isShotRunning = false;
+                badge.textContent = 'STOPPED';
+                badge.className = 'px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-600';
+            } else {
+                if (shotSeconds <= 0) return;
+                isShotRunning = true;
+                badge.textContent = 'RUNNING';
+                badge.className = 'px-2 py-0.5 rounded-full bg-amber-100 text-amber-700';
+                shotInterval = setInterval(() => {
+                    if (shotSeconds > 0) {
+                        shotSeconds--;
+                        updateShotClockDisplay();
+                        if (shotSeconds === 0) {
+                            playBuzzer();
+                            toggleShotClock();
+                        }
+                    } else {
+                        toggleShotClock();
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetShotClock(sec) {
+            shotSeconds = sec;
+            updateShotClockDisplay();
+        }
+
+        function changeScore(team, delta) {
+            scores[team] = Math.max(0, scores[team] + delta);
+            const display = document.getElementById(`score-display-${team}`);
+            display.textContent = scores[team];
+            display.style.transform = delta > 0 ? 'translateY(-4px)' : 'translateY(4px)';
+            setTimeout(() => display.style.transform = 'translateY(0)', 120);
+        }
+
+        /* ==========================================================================
+           スワイプ＆キーボード ジェスチャー制御（確実な1点増減）
+        ========================================================================== */
+        function setupSwipeGesture(element, { onTap, onSwipeUp, onSwipeDown, continuous = false }) {
+            let startY = 0;
+            let isSwiping = false;
+            let hasTriggered = false;
+            let lastTriggerTime = 0;
+            const threshold = 24;
+
+            element.addEventListener('touchstart', (e) => {
+                startY = e.touches[0].clientY;
+                isSwiping = false;
+                hasTriggered = false;
+            }, { passive: true });
+
+            element.addEventListener('touchmove', (e) => {
+                const currentY = e.touches[0].clientY;
+                const diffY = startY - currentY;
+                const now = Date.now();
+                
+                if (Math.abs(diffY) > threshold) {
+                    isSwiping = true;
+                    if (continuous) {
+                        if (now - lastTriggerTime > 150) {
+                            diffY > 0 ? (onSwipeUp && onSwipeUp()) : (onSwipeDown && onSwipeDown());
+                            startY = currentY;
+                            lastTriggerTime = now;
+                        }
+                    } else if (!hasTriggered) {
+                        hasTriggered = true;
+                        diffY > 0 ? (onSwipeUp && onSwipeUp()) : (onSwipeDown && onSwipeDown());
+                    }
+                }
+            }, { passive: true });
+
+            element.addEventListener('touchend', (e) => {
+                if (!isSwiping && onTap) {
+                    e.preventDefault();
+                    onTap();
+                }
+            });
+
+            let isMouseDown = false;
+            element.addEventListener('mousedown', (e) => {
+                if (e.target.tagName === 'INPUT') return;
+                isMouseDown = true;
+                startY = e.clientY;
+                isSwiping = false;
+                hasTriggered = false;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isMouseDown) return;
+                const diffY = startY - e.clientY;
+                const now = Date.now();
+                if (Math.abs(diffY) > threshold) {
+                    isSwiping = true;
+                    if (continuous) {
+                        if (now - lastTriggerTime > 150) {
+                            diffY > 0 ? (onSwipeUp && onSwipeUp()) : (onSwipeDown && onSwipeDown());
+                            startY = e.clientY;
+                            lastTriggerTime = now;
+                        }
+                    } else if (!hasTriggered) {
+                        hasTriggered = true;
+                        diffY > 0 ? (onSwipeUp && onSwipeUp()) : (onSwipeDown && onSwipeDown());
+                    }
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (isMouseDown) {
+                    if (!isSwiping && onTap) {
+                        onTap();
+                    }
+                    isMouseDown = false;
+                }
+            });
+        }
+
+        const mainTimerArea = document.getElementById('main-timer-area');
+        setupSwipeGesture(mainTimerArea, {
+            continuous: true,
+            onTap: () => toggleMainTimer(),
+            onSwipeUp: () => {
+                if (!isMainRunning) {
+                    mainSeconds++;
+                    updateMainTimerDisplay();
+                }
+            },
+            onSwipeDown: () => {
+                if (!isMainRunning && mainSeconds > 0) {
+                    mainSeconds--;
+                    updateMainTimerDisplay();
+                }
+            }
+        });
+
+        const shotClockArea = document.getElementById('shot-clock-area');
+        setupSwipeGesture(shotClockArea, {
+            continuous: true,
+            onTap: () => toggleShotClock(),
+            onSwipeUp: () => {
+                if (!isShotRunning) {
+                    shotSeconds++;
+                    updateShotClockDisplay();
+                }
+            },
+            onSwipeDown: () => {
+                if (!isShotRunning && shotSeconds > 0) {
+                    shotSeconds--;
+                    updateShotClockDisplay();
+                }
+            }
+        });
+
+        const periodArea = document.getElementById('period-area');
+        setupSwipeGesture(periodArea, {
+            continuous: false,
+            onSwipeUp: () => changePeriod(1),
+            onSwipeDown: () => changePeriod(-1)
+        });
+
+        // ポゼッションエリアのタップ・クリックイベント（スワイプと干渉しないよう独立制御）
+        const possessionArea = document.getElementById('possession-area');
+        possessionArea.addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+        }, { passive: true });
+        possessionArea.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+        });
+
+        periodArea.addEventListener('keydown', (e) => {
+            if (e.repeat) return;
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                changePeriod(1);
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                changePeriod(-1);
+            }
+        });
+
+        ['home', 'guest'].forEach(team => {
+            const area = document.getElementById(`score-area-${team}`);
+            setupSwipeGesture(area, {
+                continuous: false,
+                onSwipeUp: () => changeScore(team, 1),
+                onSwipeDown: () => changeScore(team, -1)
+            });
+
+            area.addEventListener('keydown', (e) => {
+                if (e.repeat) return;
+                if (document.activeElement.tagName === 'INPUT') return;
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    changeScore(team, 1);
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    changeScore(team, -1);
+                }
+            });
+        });
+
+        let hoveredElement = null;
+        document.getElementById('score-area-home').addEventListener('mouseenter', () => hoveredElement = 'home');
+        document.getElementById('score-area-home').addEventListener('mouseleave', () => hoveredElement = null);
+        document.getElementById('score-area-guest').addEventListener('mouseenter', () => hoveredElement = 'guest');
+        document.getElementById('score-area-guest').addEventListener('mouseleave', () => hoveredElement = null);
+        mainTimerArea.addEventListener('mouseenter', () => hoveredElement = 'timer');
+        mainTimerArea.addEventListener('mouseleave', () => hoveredElement = null);
+        shotClockArea.addEventListener('mouseenter', () => hoveredElement = 'shot');
+        shotClockArea.addEventListener('mouseleave', () => hoveredElement = null);
+        periodArea.addEventListener('mouseenter', () => hoveredElement = 'period');
+        periodArea.addEventListener('mouseleave', () => hoveredElement = null);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.repeat) return;
+            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+            if (document.activeElement.id === 'score-area-home' || document.activeElement.id === 'score-area-guest' || document.activeElement.id === 'period-area') return;
+            
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                const delta = e.key === 'ArrowUp' ? 1 : -1;
+                if (hoveredElement === 'home') {
+                    e.preventDefault();
+                    changeScore('home', delta);
+                } else if (hoveredElement === 'guest') {
+                    e.preventDefault();
+                    changeScore('guest', delta);
+                } else if (hoveredElement === 'period') {
+                    e.preventDefault();
+                    changePeriod(delta);
+                } else if (hoveredElement === 'timer' && !isMainRunning) {
+                    e.preventDefault();
+                    mainSeconds = Math.max(0, mainSeconds + delta);
+                    updateMainTimerDisplay();
+                } else if (hoveredElement === 'shot' && !isShotRunning) {
+                    e.preventDefault();
+                    shotSeconds = Math.max(0, shotSeconds + delta);
+                    updateShotClockDisplay();
+                }
+            }
+        });
+
+        /* ==========================================================================
+           作戦盤 ロジック（ご提示コート画像生成・選手配置・手書き描画）
+        ========================================================================== */
+        let currentTool = 'move';
+        let players = [];
+        let playerIdCounter = 1;
+
+        const courtContainer = document.getElementById('court-container');
+        const playersLayer = document.getElementById('players-layer');
+        const canvas = document.getElementById('drawing-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // ご提示いただいた「コート理想_3.jpeg」と全く同じレイアウト・木目背景の画像を生成して読み込ませる
+        function generateIdealCourtImage() {
+            const c = document.createElement('canvas');
+            const W = 1252;
+            const H = 800;
+            c.width = W;
+            c.height = H;
+            const g = c.getContext('2d');
+
+            const plankCount = 13;
+            const plankH = H / plankCount;
+            const plankColors = [
+                '#D59E63', '#CE9558', '#DFAA70', '#C78E52', '#D9A267',
+                '#D1975A', '#DFAA70', '#D49C61', '#CA9054', '#DFAA70',
+                '#C18447', '#D69E63', '#CE9558'
+            ];
+            for (let i = 0; i < plankCount; i++) {
+                g.fillStyle = plankColors[i % plankColors.length];
+                g.fillRect(0, i * plankH, W, plankH + 1);
+                g.fillStyle = 'rgba(120, 70, 20, 0.16)';
+                g.fillRect(0, i * plankH, W, 1.5);
+                g.fillStyle = 'rgba(130, 75, 25, 0.08)';
+                for (let j = 0; j < 6; j++) {
+                    const rx = ((i * 197 + j * 311) % (W - 180));
+                    const rw = 80 + ((i * 53 + j * 97) % 140);
+                    const ry = i * plankH + ((j * 13) % (plankH - 6));
+                    g.fillRect(rx, ry, rw, 2);
+                }
+            }
+
+            g.strokeStyle = '#FFFFFF';
+            g.lineWidth = 5;
+            g.lineCap = 'butt';
+            g.lineJoin = 'miter';
+
+            const marginX = 52;
+            const marginY = 48;
+            const courtW = W - marginX * 2;
+            const courtH = H - marginY * 2;
+            const midX = W / 2;
+            const midY = H / 2;
+
+            g.strokeRect(marginX, marginY, courtW, courtH);
+
+            g.beginPath();
+            g.moveTo(midX, marginY);
+            g.lineTo(midX, H - marginY);
+            g.stroke();
+
+            const centerR = 92;
+            g.beginPath();
+            g.arc(midX, midY, centerR, 0, Math.PI * 2);
+            g.stroke();
+
+            const tickPositions = [midX - 182, midX, midX + 182];
+            tickPositions.forEach(tx => {
+                g.beginPath();
+                g.moveTo(tx, marginY - 12);
+                g.lineTo(tx, marginY + 12);
+                g.moveTo(tx, H - marginY - 12);
+                g.lineTo(tx, H - marginY + 12);
+                g.stroke();
+            });
+
+            function drawHalfCourt(isLeft) {
+                const dir = isLeft ? 1 : -1;
+                const baseX = isLeft ? marginX : W - marginX;
+
+                // 3ポイントライン
+                const threeStraightLen = 115;
+                const threeCornerY = 74;
+                const threeTopY = marginY + threeCornerY;
+                const threeBotY = H - marginY - threeCornerY;
+                const arcStartX = baseX + dir * threeStraightLen;
+                const arcCenterX = baseX + dir * 100;
+                const arcR = 278;
+                const startAngle = Math.asin((threeTopY - midY) / arcR);
+                const endAngle = Math.asin((threeBotY - midY) / arcR);
+
+                g.beginPath();
+                g.moveTo(baseX, threeTopY);
+                g.lineTo(arcStartX, threeTopY);
+                if (isLeft) {
+                    g.arc(arcCenterX, midY, arcR, startAngle, endAngle, false);
+                } else {
+                    g.arc(arcCenterX, midY, arcR, Math.PI - startAngle, Math.PI - endAngle, true);
+                }
+                g.lineTo(baseX, threeBotY);
+                g.stroke();
+
+                // 制限区域（台形ペイントエリア）
+                const keyLen = 262;
+                const ftLineX = baseX + dir * keyLen;
+                const keyBaseHalfH = 108;
+                const keyTopHalfH = 88;
+
+                g.beginPath();
+                g.moveTo(baseX, midY - keyBaseHalfH);
+                g.lineTo(ftLineX, midY - keyTopHalfH);
+                g.lineTo(ftLineX, midY + keyTopHalfH);
+                g.lineTo(baseX, midY + keyBaseHalfH);
+                g.stroke();
+
+                // ペイント外のブロック目盛り
+                [0.34, 0.50, 0.66, 0.82].forEach(t => {
+                    const bx = baseX + dir * (keyLen * t);
+                    const byTop = midY - (keyBaseHalfH - (keyBaseHalfH - keyTopHalfH) * t);
+                    const byBot = midY + (keyBaseHalfH - (keyBaseHalfH - keyTopHalfH) * t);
+                    g.beginPath();
+                    g.moveTo(bx, byTop);
+                    g.lineTo(bx, byTop - 10);
+                    g.moveTo(bx, byBot);
+                    g.lineTo(bx, byBot + 10);
+                    g.stroke();
+                });
+
+                // フリースローサークル
+                const ftR = keyTopHalfH;
+                g.beginPath();
+                if (isLeft) {
+                    g.arc(ftLineX, midY, ftR, -Math.PI / 2, Math.PI / 2, false);
+                } else {
+                    g.arc(ftLineX, midY, ftR, Math.PI / 2, -Math.PI / 2, false);
+                }
+                g.stroke();
+
+                g.save();
+                g.setLineDash([12, 12]);
+                g.beginPath();
+                if (isLeft) {
+                    g.arc(ftLineX, midY, ftR, Math.PI / 2, -Math.PI / 2, false);
+                } else {
+                    g.arc(ftLineX, midY, ftR, -Math.PI / 2, Math.PI / 2, false);
+                }
+                g.stroke();
+                g.restore();
+
+                // バックボード ＆ リング
+                const boardX = baseX + dir * 36;
+                const boardHalfH = 34;
+                g.beginPath();
+                g.moveTo(boardX, midY - boardHalfH);
+                g.lineTo(boardX, midY + boardHalfH);
+                g.stroke();
+
+                const rimR = 20;
+                const rimCenterX = boardX + dir * (rimR + 8);
+                g.beginPath();
+                g.moveTo(boardX, midY);
+                g.lineTo(boardX + dir * 8, midY);
+                g.stroke();
+                g.beginPath();
+                g.arc(rimCenterX, midY, rimR, 0, Math.PI * 2);
+                g.stroke();
+            }
+
+            drawHalfCourt(true);
+            drawHalfCourt(false);
+
+            courtContainer.style.backgroundImage = `url('${c.toDataURL('image/png')}')`;
+        }
+
+        function initPlayers() {
+            const initialPositions = [
+                { type: 'offense', label: '1', x: 35, y: 50 },
+                { type: 'offense', label: '2', x: 25, y: 20 },
+                { type: 'offense', label: '3', x: 25, y: 80 },
+                { type: 'offense', label: '4', x: 15, y: 32 },
+                { type: 'offense', label: '5', x: 15, y: 68 },
+                { type: 'defense', label: '1', x: 30, y: 50 },
+                { type: 'defense', label: '2', x: 21, y: 25 },
+                { type: 'defense', label: '3', x: 21, y: 75 },
+                { type: 'defense', label: '4', x: 12, y: 36 },
+                { type: 'defense', label: '5', x: 12, y: 64 },
+                { type: 'ball', label: 'B', x: 37.5, y: 47 }
+            ];
+            initialPositions.forEach(p => {
+                players.push({ id: playerIdCounter++, ...p });
+            });
+            renderPlayers();
+        }
+
+        function addPlayer(type) {
+            const sameType = players.filter(p => p.type === type);
+            if (sameType.length >= 10) return;
+            const nextNum = sameType.length + 1;
+            players.push({
+                id: playerIdCounter++,
+                type: type,
+                label: String(nextNum),
+                x: type === 'offense' ? 46 : 54,
+                y: 50
+            });
+            renderPlayers();
+        }
+
+        function removePlayer(type) {
+            const sameType = players.filter(p => p.type === type);
+            if (sameType.length === 0) return;
+            const last = sameType[sameType.length - 1];
+            players = players.filter(p => p.id !== last.id);
+            renderPlayers();
+        }
+
+        function addBall() {
+            const balls = players.filter(p => p.type === 'ball');
+            if (balls.length >= 5) return;
+            players.push({
+                id: playerIdCounter++,
+                type: 'ball',
+                label: 'B',
+                x: 50,
+                y: 50
+            });
+            renderPlayers();
+        }
+
+        function removeBall() {
+            const balls = players.filter(p => p.type === 'ball');
+            if (balls.length === 0) return;
+            const last = balls[balls.length - 1];
+            players = players.filter(p => p.id !== last.id);
+            renderPlayers();
+        }
+
+        function renderPlayers() {
+            playersLayer.innerHTML = '';
+            let offCount = 0;
+            let defCount = 0;
+            let ballCount = 0;
+
+            players.forEach(p => {
+                if (p.type === 'offense') offCount++;
+                else if (p.type === 'defense') defCount++;
+                else if (p.type === 'ball') ballCount++;
+
+                const el = document.createElement('div');
+                el.style.left = `${p.x}%`;
+                el.style.top = `${p.y}%`;
+                el.style.transform = 'translate(-50%, -50%)';
+                el.style.pointerEvents = currentTool === 'move' ? 'auto' : 'none';
+
+                if (p.type === 'ball') {
+                    // ボールのサイズを一回り大きく調整 (スマホではコートに合わせてコンパクト化)
+                    el.className = 'player-token absolute w-4 h-4 md:w-8 md:h-8 rounded-full bg-amber-500 text-white border md:border-2 border-white flex items-center justify-center font-bold text-[8px] md:text-xs shadow-md';
+                    el.textContent = 'B';
+                } else {
+                    // 選手のサイズを一回り大きく調整 (スマホではコートに合わせてコンパクト化)
+                    el.className = `player-token absolute w-5 h-5 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-[9px] md:text-base shadow-md ${
+                        p.type === 'offense' 
+                            ? 'bg-zinc-900 text-white border md:border-2 border-white' 
+                            : 'bg-white text-red-600 border md:border-2 border-red-600'
+                    }`;
+                    el.textContent = p.label;
+                }
+
+                makeDraggable(el, p);
+                playersLayer.appendChild(el);
+            });
+
+            document.getElementById('offense-count').textContent = offCount;
+            document.getElementById('defense-count').textContent = defCount;
+            document.getElementById('ball-count').textContent = ballCount;
+        }
+
+        function makeDraggable(el, playerObj) {
+            let isDragging = false;
+
+            const onStart = (e) => {
+                if (currentTool !== 'move') return;
+                e.stopPropagation();
+                isDragging = true;
+            };
+
+            const onMove = (e) => {
+                if (!isDragging) return;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const rect = courtContainer.getBoundingClientRect();
+
+                let xPercent = ((clientX - rect.left) / rect.width) * 100;
+                let yPercent = ((clientY - rect.top) / rect.height) * 100;
+
+                xPercent = Math.max(2, Math.min(98, xPercent));
+                yPercent = Math.max(3, Math.min(97, yPercent));
+
+                playerObj.x = xPercent;
+                playerObj.y = yPercent;
+                el.style.left = `${xPercent}%`;
+                el.style.top = `${yPercent}%`;
+            };
+
+            const onEnd = () => {
+                isDragging = false;
+            };
+
+            el.addEventListener('mousedown', onStart);
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onEnd);
+
+            el.addEventListener('touchstart', onStart, { passive: false });
+            window.addEventListener('touchmove', onMove, { passive: false });
+            window.addEventListener('touchend', onEnd);
+        }
+
+        /* ==========================================================================
+           手書きキャンバス（ペン ＆ 消しゴム）
+        ========================================================================== */
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let currentPenColor = '#18181B'; // デフォルトは黒
+
+        function setPenColor(color) {
+            currentPenColor = color;
+            const btnBlack = document.getElementById('pen-color-black');
+            const btnRed = document.getElementById('pen-color-red');
+            if (color === '#18181B') {
+                btnBlack.classList.add('ring-2', 'ring-offset-1');
+                btnRed.classList.remove('ring-2', 'ring-offset-1');
+            } else {
+                btnRed.classList.add('ring-2', 'ring-offset-1');
+                btnBlack.classList.remove('ring-2', 'ring-offset-1');
+            }
+        }
+
+        function setBoardTool(tool) {
+            currentTool = tool;
+            ['move', 'pen', 'eraser'].forEach(t => {
+                const btn = document.getElementById(`tool-${t}`);
+                if (t === tool) {
+                    btn.className = 'p-2 rounded-lg text-xs font-medium bg-white text-zinc-900 shadow-sm flex items-center gap-1';
+                } else {
+                    btn.className = 'p-2 rounded-lg text-xs font-medium text-zinc-600 hover:text-zinc-900 flex items-center gap-1';
+                }
+            });
+
+            const btnBlack = document.getElementById('pen-color-black');
+            const btnRed = document.getElementById('pen-color-red');
+            if (tool === 'pen') {
+                btnBlack.classList.remove('hidden');
+                btnRed.classList.remove('hidden');
+                setPenColor(currentPenColor);
+            } else {
+                btnBlack.classList.add('hidden');
+                btnRed.classList.add('hidden');
+            }
+
+            canvas.style.cursor = tool === 'move' ? 'default' : (tool === 'pen' ? 'crosshair' : 'cell');
+            renderPlayers();
+        }
+
+        function resizeCanvas() {
+            const rect = courtContainer.getBoundingClientRect();
+            if (rect.width === 0) return;
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
+
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+
+            ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, canvas.width, canvas.height);
+        }
+
+        window.addEventListener('resize', () => {
+            if (!document.getElementById('view-board').classList.contains('hidden')) {
+                resizeCanvas();
+            }
+        });
+
+        function getCanvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function startDrawing(e) {
+            if (currentTool === 'move') return;
+            isDrawing = true;
+            const coords = getCanvasCoords(e);
+            lastX = coords.x;
+            lastY = coords.y;
+        }
+
+        function draw(e) {
+            if (!isDrawing || currentTool === 'move') return;
+            e.preventDefault();
+            const coords = getCanvasCoords(e);
+
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            if (currentTool === 'pen') {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = currentPenColor;
+                ctx.lineWidth = 3;
+            } else if (currentTool === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.lineWidth = 22;
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(coords.x, coords.y);
+            ctx.stroke();
+
+            lastX = coords.x;
+            lastY = coords.y;
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function clearLines() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        canvas.addEventListener('touchstart', startDrawing, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', stopDrawing);
+
+        // 初期セットアップ
+        window.addEventListener('DOMContentLoaded', () => {
+            generateIdealCourtImage();
+            initPlayers();
+            resizeCanvas();
+            updatePossessionDisplay();
+
+            // 可能なブラウザでは横画面ロックを試行
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(() => {});
+            }
+        });
+
+        // 画面の向き変更時にキャンバスサイズを再計算
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                if (!document.getElementById('view-board').classList.contains('hidden')) {
+                    resizeCanvas();
+                }
+            }, 200);
+        });
+    </script>
+</body>
+</html>
