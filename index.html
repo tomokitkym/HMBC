@@ -2603,10 +2603,10 @@
             const availW = Math.max(100, wRect.width - pad);
             const availH = Math.max(100, wRect.height - pad);
 
-            let targetW = availW;
+            let targetW = availW * 0.5; // 自動で50%ズーム（縮小）
             let targetH = targetW / aspect;
-            if (targetH > availH) {
-                targetH = availH;
+            if (targetH > availH * 0.5) {
+                targetH = availH * 0.5;
                 targetW = targetH * aspect;
             }
 
