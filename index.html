@@ -22,6 +22,21 @@
             padding: 0;
             overflow: hidden;
         }
+
+        /* スマホ縦持ち時に自動で横画面表示にするための強制回転ラッパー */
+        @media screen and (max-width: 900px) and (orientation: portrait) {
+            body {
+                width: 100dvh;
+                height: 100vw;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                transform: rotate(-90deg);
+                transform-origin: top left;
+                overflow: hidden;
+            }
+        }
+
         .font-mono-num {
             font-family: 'JetBrains Mono', monospace;
             font-variant-numeric: tabular-nums;
