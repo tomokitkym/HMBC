@@ -74,6 +74,27 @@
             z-index: 40;
         }
 
+        /* アプリ全体のボタンを一回り大きくする */
+        #app-wrapper button:not(.bcolor-btn) {
+            min-height: 36px;
+            font-size: calc(1em + 1px);
+        }
+        #app-wrapper button.bcolor-btn {
+            width: 30px;
+            height: 30px;
+            min-height: 30px;
+        }
+        #app-wrapper button.stat-adjust-btn {
+            width: 42px;
+            height: 40px;
+            min-height: 40px;
+            font-size: 15px;
+        }
+        #custom-modal button {
+            min-height: 36px;
+            font-size: 13px;
+        }
+
         /* ==========================================
            JBA 公式スコアシート用スタイル（スコープ化）
         ========================================== */
@@ -126,20 +147,26 @@
         }
         #jba-sheet-wrapper .center { text-align: center; }
         #jba-sheet-wrapper .bold { font-weight: bold; }
-        #jba-sheet-wrapper .titlebar { height: 8.5mm; display: grid; grid-template-columns: 26mm 1fr 26mm; align-items: center; }
+        #jba-sheet-wrapper .titlebar { height: 7mm; display: flex; align-items: center; justify-content: center; border-bottom: .25mm solid #444; }
         #jba-sheet-wrapper .jba-logo { display: flex; align-items: center; gap: 1.5mm; }
         #jba-sheet-wrapper .jba { font: 900 18px Arial, sans-serif; letter-spacing: -.8px; }
         #jba-sheet-wrapper .jba-emblem { width: 5.5mm; height: 6.5mm; border: .3mm solid #222; border-radius: 0 0 3mm 3mm; display: flex; align-items: center; justify-content: center; font-size: 4px; font-weight: bold; }
-        #jba-sheet-wrapper .title { text-align: center; font: bold 12px "Times New Roman", Georgia, serif; letter-spacing: .5px; }
+        #jba-sheet-wrapper .title { text-align: center; font: bold 10px "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif; letter-spacing: 1px; }
         
         /* 上部メタ・スコアサマリーエリア */
         #jba-sheet-wrapper .top-grid { margin-top: 1mm; display: grid; grid-template-columns: 103mm 1fr; gap: 1.2mm; }
         #jba-sheet-wrapper .meta-left td { height: 7.5mm; }
-        #jba-sheet-wrapper .score-summary { height: 22mm; }
-        #jba-sheet-wrapper .score-summary td { height: 5.5mm; }
-        #jba-sheet-wrapper .q-score-box { width: 12mm; height: 11mm; border: .3mm solid #444; margin: 0 auto; }
+        #jba-sheet-wrapper .score-summary { height: 22mm; display: grid; grid-template-columns: 24mm minmax(0, 1fr) 24mm; gap: 1mm; }
+        #jba-sheet-wrapper .score-team-panel { border: .25mm solid #444; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5mm; background: #fff; }
+        #jba-sheet-wrapper .score-team-caption { font-size: 5.2px; line-height: 1.15; text-align: center; font-weight: 700; }
+        #jba-sheet-wrapper .score-team-caption span { display: block; font-size: 4.2px; font-weight: 400; }
+        #jba-sheet-wrapper .score-team-total { font-size: 4.2px; color: #555; line-height: 1; }
+        #jba-sheet-wrapper .q-score-box { width: 13mm; height: 10mm; border: .3mm solid #444; margin: 0 auto; }
         #jba-sheet-wrapper .q-score-box input { text-align: center; font-size: 9px; font-weight: bold; }
-        #jba-sheet-wrapper .q-list { font-size: 5px; line-height: 1.45; text-align: center; }
+        #jba-sheet-wrapper .period-score-table { width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; }
+        #jba-sheet-wrapper .period-score-table th { height: 3.5mm; background: #f8f9fa; font-size: 4.5px; text-align: center; }
+        #jba-sheet-wrapper .period-score-table td { height: 3.5mm; text-align: center; font-size: 5px; }
+        #jba-sheet-wrapper .period-score-table input { text-align: center; font-size: 6px; font-weight: 600; padding: 0; }
         #jba-sheet-wrapper .meta-right td { height: 5.9mm; }
         #jba-sheet-wrapper .meta-right .lbl-cell { width: 17mm; padding-left: 1mm; font-size: 5px; }
 
@@ -347,16 +374,16 @@
             #main-tabs::-webkit-scrollbar{display:none;}
             #main-tabs button{
                 flex:0 0 auto !important;
-                min-height:42px !important;
-                padding:0 12px !important;
-                font-size:13px !important;
+                min-height:46px !important;
+                padding:0 14px !important;
+                font-size:14px !important;
                 border-radius:9px !important;
             }
             #app-wrapper > header > div > button{
                 flex:0 0 auto !important;
-                min-height:42px !important;
-                padding:0 11px !important;
-                font-size:12px !important;
+                min-height:46px !important;
+                padding:0 13px !important;
+                font-size:13px !important;
                 border-radius:9px !important;
             }
             #app-wrapper > main{min-height:0 !important;overflow:hidden !important;}
@@ -389,8 +416,8 @@
             #view-practice > div:first-child button,
             #view-board > div:first-child button,
             #view-ranking > div:first-child button,
-            #view-scoresheet > .no-print button{min-height:36px !important;}
-            #practice-q-selector button{min-height:34px !important;padding:0 10px !important;}
+            #view-scoresheet > .no-print button{min-height:40px !important;font-size:13px !important;padding-left:12px !important;padding-right:12px !important;}
+            #practice-q-selector button{min-height:38px !important;padding:0 12px !important;}
             #practice-panels-container{min-height:0 !important;}
 
             /* スコアシート本体は横スクロール可能にして、A4レイアウトを壊さない */
@@ -404,7 +431,7 @@
 
             /* 作戦盤 */
             #board-stage-wrapper{min-height:0 !important;padding:4px !important;}
-            #view-board .bcolor-btn{width:28px !important;height:28px !important;min-height:28px !important;}
+            #view-board .bcolor-btn{width:32px !important;height:32px !important;min-height:32px !important;}
 
             /* 練習／スタッツ */
             #prac-single-workspace-A,
@@ -428,9 +455,9 @@
             /* スタッツの -1 / +1 を明確に表示 */
             #prac-single-workspace-A .stat-adjust-btn,
             #prac-single-workspace-B .stat-adjust-btn{
-                width:42px !important;
-                height:36px !important;
-                min-height:36px !important;
+                width:46px !important;
+                height:42px !important;
+                min-height:42px !important;
                 border-radius:8px !important;
                 font-size:13px !important;
                 font-weight:800 !important;
@@ -805,7 +832,7 @@
                     <div class="flex items-center gap-2">
                         <span class="text-xs md:text-sm font-bold text-zinc-700 flex items-center gap-1.5">
                             <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
-                            JBA MINI-BASKETBALL OFFICIAL SCORESHEET
+                            スコアシートプレビュー
                         </span>
                         <span id="sheet-save-status" class="text-[11px] text-zinc-400">入力内容はページを閉じると消えます</span>
                     </div>
@@ -819,16 +846,11 @@
                 <div id="jba-sheet-wrapper" class="flex-1 overflow-auto rounded-xl border border-zinc-300 p-2 md:p-4">
                     <div class="sheet">
                         <div class="titlebar">
-                            <div class="jba-logo">
-                                <span class="jba">JBA</span>
-                                <span class="jba-emblem">BASKET<br>BALL</span>
-                            </div>
-                            <div class="title">MINI-BASKETBALL&nbsp;&nbsp;&nbsp;OFFICIAL&nbsp;&nbsp;&nbsp;SCORESHEET</div>
-                            <div></div>
+                            <div class="title">スコアシート</div>
                         </div>
 
                         <div class="top-grid">
-                            <!-- 左側：大会名 & スコアサマリー -->
+                            <!-- 左側：大会名・チーム別合計点・各クォーター得点 -->
                             <div class="flex flex-col gap-1">
                                 <table class="meta-left">
                                     <colgroup><col style="width:16mm"><col></colgroup>
@@ -837,46 +859,29 @@
                                         <td><input data-key="event"></td>
                                     </tr>
                                 </table>
-                                <table class="score-summary">
-                                    <colgroup><col style="width:16mm"><col style="width:18mm"><col><col style="width:18mm"></colgroup>
-                                    <tr>
-                                        <td class="center" style="font-size:5.2px;">チームA</td>
-                                        <td rowspan="4" class="center">
-                                            <div class="q-score-box"><input data-key="q1_scoreA" style="color:#dc2626;"></div>
-                                        </td>
-                                        <td rowspan="4" class="q-list">
-                                            <div class="flex items-center justify-center gap-0.5">
-                                                <div class="text-[8px] text-zinc-500 font-light">{</div>
-                                                <div class="leading-[1.35]">
-                                                    1Q<br>2Q<br>3Q<br>4Q<br>OT
-                                                </div>
-                                                <div class="text-[8px] text-zinc-500 font-light">}</div>
-                                            </div>
-                                        </td>
-                                        <td rowspan="4" class="center">
-                                            <div class="q-score-box"><input data-key="q1_scoreB" style="color:#dc2626;"></div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td rowspan="3" class="center">
-                                            <div class="q-score-box"><input id="sheet-total-a" data-key="totalA" value="" style="color:#111;"></div>
-                                        </td>
-                                    </tr>
-                                    <tr></tr>
-                                    <tr></tr>
-                                    <tr>
-                                        <td class="center" style="font-size:5.2px;">チームB</td>
-                                        <td rowspan="3" class="center">
-                                            <div class="q-score-box"><input id="sheet-total-b" data-key="totalB" value="" style="color:#111;"></div>
-                                        </td>
-                                        <td rowspan="3" class="center" style="font-size:5px;">最終スコア<br>Final Score</td>
-                                        <td rowspan="3" class="center">
-                                            <div class="q-score-box"><input data-key="ot_scoreB" style="color:#111;"></div>
-                                        </td>
-                                    </tr>
-                                    <tr></tr>
-                                    <tr></tr>
-                                </table>
+                                <div class="score-summary">
+                                    <div class="score-team-panel">
+                                        <div class="score-team-caption">チームA<span>Team A</span></div>
+                                        <div class="q-score-box"><input id="sheet-total-a" data-key="totalA" value="" style="color:#111;"></div>
+                                        <div class="score-team-total">合計得点</div>
+                                    </div>
+                                    <table class="period-score-table">
+                                        <colgroup><col style="width:9mm"><col><col></colgroup>
+                                        <thead><tr><th>Q</th><th>A</th><th>B</th></tr></thead>
+                                        <tbody>
+                                            <tr><td>1Q</td><td><input data-key="q1_scoreA" style="color:#dc2626;"></td><td><input data-key="q1_scoreB" style="color:#dc2626;"></td></tr>
+                                            <tr><td>2Q</td><td><input data-key="q2_scoreA" style="color:#1d4ed8;"></td><td><input data-key="q2_scoreB" style="color:#1d4ed8;"></td></tr>
+                                            <tr><td>3Q</td><td><input data-key="q3_scoreA" style="color:#dc2626;"></td><td><input data-key="q3_scoreB" style="color:#dc2626;"></td></tr>
+                                            <tr><td>4Q</td><td><input data-key="q4_scoreA" style="color:#1d4ed8;"></td><td><input data-key="q4_scoreB" style="color:#1d4ed8;"></td></tr>
+                                            <tr><td>OT</td><td><input data-key="ot_scoreA" style="color:#111;"></td><td><input data-key="ot_scoreB" style="color:#111;"></td></tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="score-team-panel">
+                                        <div class="score-team-caption">チームB<span>Team B</span></div>
+                                        <div class="q-score-box"><input id="sheet-total-b" data-key="totalB" value="" style="color:#111;"></div>
+                                        <div class="score-team-total">合計得点</div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- 右側：日付・会場・時間・審判・オフィシャル -->
@@ -1040,6 +1045,7 @@
             margin-top: 4px;
             z-index: 40;
         }
+        #app-wrapper button:not(.bcolor-btn) { min-height: 36px; font-size: calc(1em + 1px); }
     
         @media screen and (max-width: 950px) and (pointer: coarse) {
             html, body { width:100%; height:100%; overflow:hidden !important; }
@@ -1052,7 +1058,7 @@
             #main-timer-display, #shot-clock-display { font-size:clamp(42px, 8.5vw, 76px) !important; }
             #period-display { font-size:clamp(29px, 5vw, 48px) !important; }
             #score-display-home, #score-display-guest { font-size:clamp(58px, 12vh, 112px) !important; }
-            #view-timer button { min-height:37px !important; padding-top:4px !important; padding-bottom:4px !important; }
+            #view-timer button { min-height:40px !important; padding-top:5px !important; padding-bottom:5px !important; font-size:13px !important; }
             #team-input-box-home, #team-input-box-guest { padding:4px 8px !important; }
             #team-name-home, #team-name-guest { font-size:14px !important; }
             #score-area-home .text-\[10px\], #score-area-guest .text-\[10px\] { font-size:10px !important; }
