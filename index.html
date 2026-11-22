@@ -448,6 +448,25 @@
             #app-wrapper{visibility:visible !important;}
         }
 
+
+        /* スマホ横画面だけ、アプリ本体を最初から50%表示する。
+           表示領域を2倍にして左上を基準に縮小することで、全体を画面内に収める。
+           ズーム操作ボタンや追加UIは設けない。 */
+        @media screen and (max-width: 950px) and (pointer: coarse) and (orientation: landscape) {
+            #app-wrapper {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 200vw !important;
+                height: 200vh !important;
+                height: 200dvh !important;
+                max-width: none !important;
+                max-height: none !important;
+                transform: translate(0px, 0px) scale(0.5) !important;
+                transform-origin: 0 0 !important;
+                overflow: hidden !important;
+            }
+        }
     </style>
 </head>
 <body>
