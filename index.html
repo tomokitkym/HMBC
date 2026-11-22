@@ -260,267 +260,197 @@
             }
         }
 
-        @media screen and (max-width: 767px) and (orientation: portrait) {
-            #app-wrapper {
-                position: fixed;
-                top: 0;
-                left: 100vw;
-                width: 100dvh;
-                height: 100vw;
-                transform: rotate(90deg);
-                transform-origin: top left;
-            }
-        }
-    
         #view-timer-app { min-height: 0; overflow: hidden; }
         #embedded-hmbc-timer { flex: 1 1 auto; min-height: 0; }
 
 
         /* ==============================================
            HMBC スマートフォン専用UI（横画面）
-           既存の配色・カード・操作感を維持して配置のみ最適化
+           元のデザインを維持し、配置だけスマホ向けに最適化
         ============================================== */
         #mobile-landscape-gate {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 10000;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-            background: #FBFBFB;
-            color: #3F3F46;
-            text-align: center;
+            display:none;
+            position:fixed;
+            inset:0;
+            z-index:10000;
+            align-items:center;
+            justify-content:center;
+            padding:20px;
+            background:#FBFBFB;
+            color:#3F3F46;
+            text-align:center;
         }
-        #mobile-landscape-gate.is-visible { display: flex; }
-        #mobile-landscape-gate .gate-card {
-            width: min(420px, 100%);
-            background: #fff;
-            border: 1px solid #E4E4E7;
-            border-radius: 18px;
-            box-shadow: 0 12px 36px rgba(24,24,27,.10);
-            padding: 24px 22px;
+        #mobile-landscape-gate.is-visible{display:flex;}
+        #mobile-landscape-gate .gate-card{
+            width:min(420px,92vw);
+            background:#fff;
+            border:1px solid #E4E4E7;
+            border-radius:18px;
+            box-shadow:0 10px 30px rgba(24,24,27,.10);
+            padding:22px;
         }
-        #mobile-landscape-gate .gate-symbol {
-            width: 64px;
-            height: 64px;
-            margin: 0 auto 12px;
-            display: grid;
-            place-items: center;
-            border-radius: 18px;
-            background: #F4F4F5;
-            color: #52525B;
-            font-size: 34px;
-            font-weight: 700;
-        }
-        #mobile-landscape-gate button {
-            min-height: 46px;
-            border: 0;
-            border-radius: 11px;
-            background: #3F3F46;
-            color: #fff;
-            padding: 0 22px;
-            font-size: 14px;
-            font-weight: 700;
+        #mobile-landscape-gate button{
+            min-height:46px;
+            border:0;
+            border-radius:11px;
+            background:#3F3F46;
+            color:#fff;
+            padding:0 20px;
+            font-size:14px;
+            font-weight:700;
         }
 
+        /* スマホ横画面：transformは使わない。これが崩れの原因になりやすいため。 */
         @media screen and (max-width: 950px) and (pointer: coarse) {
-            html, body {
-                width: 100%;
-                height: 100%;
-                min-height: 0;
-                overflow: hidden !important;
-                overscroll-behavior: none;
-                -webkit-text-size-adjust: 100%;
+            html,body{
+                width:100%;
+                height:100%;
+                min-height:0;
+                overflow:hidden !important;
+                -webkit-text-size-adjust:100%;
+                overscroll-behavior:none;
             }
-            body { touch-action: manipulation; }
-            #app-wrapper {
-                width: 100vw !important;
-                height: 100dvh !important;
-                min-height: 0 !important;
-                padding: 5px 6px !important;
-                gap: 3px !important;
-                overflow: hidden !important;
+            body{touch-action:manipulation;}
+            #app-wrapper{
+                width:100vw !important;
+                height:100dvh !important;
+                min-height:0 !important;
+                padding:5px !important;
+                gap:4px !important;
+                overflow:hidden !important;
             }
-            #app-wrapper > header {
-                min-height: 45px !important;
-                height: 45px !important;
-                margin-bottom: 2px !important;
-                border-radius: 11px !important;
+            #app-wrapper > header{
+                height:52px !important;
+                min-height:52px !important;
+                margin-bottom:2px !important;
+                border-radius:11px !important;
             }
-            #app-wrapper > header > div {
-                height: 43px !important;
-                min-height: 43px !important;
-                padding-left: 8px !important;
-                padding-right: 8px !important;
-                gap: 7px !important;
+            #app-wrapper > header > div{
+                height:50px !important;
+                min-height:50px !important;
+                padding:0 9px !important;
+                gap:7px !important;
             }
-            #app-wrapper > header > div > div:first-child { gap: 5px !important; }
-            #app-wrapper > header > div > div:first-child > div {
-                width: 25px !important;
-                height: 25px !important;
-                border-radius: 7px !important;
+            #app-wrapper > header > div > div:first-child{gap:5px !important;}
+            #app-wrapper > header > div > div:first-child > div{
+                width:28px !important;height:28px !important;border-radius:8px !important;
             }
-            #app-wrapper > header > div > div:first-child > span {
-                font-size: 13px !important;
+            #app-wrapper > header > div > div:first-child > span{font-size:14px !important;}
+            #main-tabs{
+                flex:1 1 auto !important;
+                min-width:0 !important;
+                overflow-x:auto !important;
+                scrollbar-width:none;
+                justify-content:flex-start !important;
+                gap:3px !important;
             }
-            #main-tabs {
-                flex: 1 1 auto !important;
-                width: 0 !important;
-                max-width: none !important;
-                min-width: 0 !important;
-                justify-content: center !important;
-                overflow-x: auto !important;
-                scrollbar-width: none;
-                gap: 2px !important;
+            #main-tabs::-webkit-scrollbar{display:none;}
+            #main-tabs button{
+                flex:0 0 auto !important;
+                min-height:42px !important;
+                padding:0 12px !important;
+                font-size:13px !important;
+                border-radius:9px !important;
             }
-            #main-tabs::-webkit-scrollbar { display: none; }
-            #main-tabs button {
-                flex: 0 0 auto !important;
-                min-height: 37px !important;
-                padding: 0 9px !important;
-                font-size: 12px !important;
-                line-height: 1.1 !important;
-                border-radius: 8px !important;
+            #app-wrapper > header > div > button{
+                flex:0 0 auto !important;
+                min-height:42px !important;
+                padding:0 11px !important;
+                font-size:12px !important;
+                border-radius:9px !important;
             }
-            #app-wrapper > header > div > button {
-                flex: 0 0 auto !important;
-                min-height: 37px !important;
-                padding: 0 9px !important;
-                font-size: 11px !important;
-                gap: 4px !important;
-            }
-            #app-wrapper > header > div > button i { width: 13px !important; height: 13px !important; }
-            #app-wrapper > main { min-height: 0 !important; overflow: hidden !important; }
-            #app-wrapper main > section { min-height: 0 !important; }
+            #app-wrapper > main{min-height:0 !important;overflow:hidden !important;}
+            #app-wrapper main > section{min-height:0 !important;}
 
-            /* タイマー以外の各画面も横幅を活かして配置 */
-            #view-practice, #view-board, #view-ranking, #view-scoresheet {
-                gap: 4px !important;
-                min-height: 0 !important;
+            /* スコアシート／ランキング／作戦盤の上部操作列 */
+            #view-practice,#view-board,#view-ranking,#view-scoresheet{
+                min-height:0 !important;
+                gap:4px !important;
             }
-            #view-practice > div:first-child {
-                min-height: 42px !important;
-                padding: 3px 7px !important;
-                flex-wrap: nowrap !important;
-                gap: 6px !important;
-                overflow-x: auto !important;
-                scrollbar-width: none;
+            #view-practice > div:first-child,
+            #view-board > div:first-child,
+            #view-ranking > div:first-child,
+            #view-scoresheet > .no-print{
+                min-height:42px !important;
+                padding:3px 6px !important;
+                gap:5px !important;
+                flex-wrap:nowrap !important;
+                overflow-x:auto !important;
+                scrollbar-width:none;
             }
-            #view-practice > div:first-child > div { flex: 0 0 auto; }
-            #view-practice > div:first-child input { width: 115px !important; font-size: 14px !important; }
-            #view-practice > div:first-child button { min-height: 34px !important; }
-            #practice-q-selector button { min-height: 31px !important; padding: 0 8px !important; }
-            #view-practice > div:nth-child(2) {
-                min-height: 34px !important;
-                padding: 2px 4px !important;
+            #view-practice > div:first-child::-webkit-scrollbar,
+            #view-board > div:first-child::-webkit-scrollbar,
+            #view-ranking > div:first-child::-webkit-scrollbar,
+            #view-scoresheet > .no-print::-webkit-scrollbar{display:none;}
+            #view-practice > div:first-child > div,
+            #view-board > div:first-child > div,
+            #view-ranking > div:first-child > div{flex:0 0 auto;}
+
+            #view-practice > div:first-child button,
+            #view-board > div:first-child button,
+            #view-ranking > div:first-child button,
+            #view-scoresheet > .no-print button{min-height:36px !important;}
+            #practice-q-selector button{min-height:34px !important;padding:0 10px !important;}
+            #practice-panels-container{min-height:0 !important;}
+
+            /* スコアシート本体は横スクロール可能にして、A4レイアウトを壊さない */
+            #jba-sheet-wrapper{
+                min-height:0 !important;
+                overflow:auto !important;
+                padding:5px !important;
+                -webkit-overflow-scrolling:touch;
             }
-            #view-practice > div:nth-child(2) button { min-height: 31px !important; }
-            #practice-panels-container { flex: 1 1 auto !important; min-height: 0 !important; }
-            #practice-panel-A > div:first-child,
-            #practice-panel-B > div:first-child {
-                min-height: 38px !important;
-                padding: 3px 7px !important;
-                flex-wrap: nowrap !important;
-                gap: 5px !important;
-            }
-            #practice-panel-A > div:first-child button,
-            #practice-panel-B > div:first-child button { min-height: 32px !important; }
-            #prac-single-workspace-A, #prac-single-workspace-B {
-                padding: 5px !important;
-                min-height: 0 !important;
-            }
-            #prac-single-workspace-A > div, #prac-single-workspace-B > div { gap: 5px !important; }
-            #prac-single-workspace-A [class*="md:grid-cols-2"],
-            #prac-single-workspace-B [class*="md:grid-cols-2"] {
-                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            }
+            #jba-sheet-wrapper .sheet{flex-shrink:0 !important;}
+
+            /* 作戦盤 */
+            #board-stage-wrapper{min-height:0 !important;padding:4px !important;}
+            #view-board .bcolor-btn{width:28px !important;height:28px !important;min-height:28px !important;}
+
+            /* 練習／スタッツ */
+            #prac-single-workspace-A,
+            #prac-single-workspace-B{min-height:0 !important;padding:5px !important;}
             #prac-single-workspace-A .grid-cols-12,
-            #prac-single-workspace-B .grid-cols-12 {
-                grid-template-columns: minmax(0, 3fr) minmax(150px, 1fr) !important;
-                gap: 6px !important;
+            #prac-single-workspace-B .grid-cols-12{
+                grid-template-columns:minmax(0,3fr) minmax(150px,1fr) !important;
+                gap:6px !important;
             }
-            #prac-single-workspace-A .grid-cols-12 > .col-span-9,
-            #prac-single-workspace-B .grid-cols-12 > .col-span-9 { grid-column: span 1 / span 1 !important; }
-            #prac-single-workspace-A .grid-cols-12 > .col-span-3,
-            #prac-single-workspace-B .grid-cols-12 > .col-span-3 { grid-column: span 1 / span 1 !important; }
-            #prac-single-workspace-A .h-\[30\%\],
-            #prac-single-workspace-B .h-\[30\%\] { height: 32% !important; }
-            #prac-single-workspace-A .h-\[70\%\],
-            #prac-single-workspace-B .h-\[70\%\] { height: 68% !important; }
-            #prac-single-workspace-A button, #prac-single-workspace-B button { touch-action: manipulation; }
+            #prac-single-workspace-A .col-span-9,
+            #prac-single-workspace-B .col-span-9{grid-column:span 1 / span 1 !important;}
+            #prac-single-workspace-A .col-span-3,
+            #prac-single-workspace-B .col-span-3{grid-column:span 1 / span 1 !important;}
+            #prac-single-workspace-A [class*="md:grid-cols-2"],
+            #prac-single-workspace-B [class*="md:grid-cols-2"]{
+                grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+            }
+            #prac-single-workspace-A button,
+            #prac-single-workspace-B button{touch-action:manipulation;}
 
-            #view-board > div:first-child {
-                flex-wrap: nowrap !important;
-                gap: 5px !important;
-                padding: 4px 6px !important;
-                overflow-x: auto !important;
-                scrollbar-width: none;
+            /* スタッツの -1 / +1 を明確に表示 */
+            #prac-single-workspace-A .stat-adjust-btn,
+            #prac-single-workspace-B .stat-adjust-btn{
+                width:42px !important;
+                height:36px !important;
+                min-height:36px !important;
+                border-radius:8px !important;
+                font-size:13px !important;
+                font-weight:800 !important;
             }
-            #view-board > div:first-child > div { flex: 0 0 auto; }
-            #view-board > div:first-child button {
-                min-height: 35px !important;
-                padding-left: 9px !important;
-                padding-right: 9px !important;
-            }
-            #view-board .bcolor-btn { width: 25px !important; height: 25px !important; min-height: 25px !important; }
-            #board-stage-wrapper { padding: 4px !important; min-height: 0 !important; }
-
-            #view-ranking > div:first-child {
-                min-height: 38px !important;
-                padding: 3px 7px !important;
-                flex-wrap: nowrap !important;
-                gap: 6px !important;
-            }
-            #view-ranking > div:first-child button { min-height: 32px !important; }
-            #ranking-category-cards { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 5px !important; }
-            #view-ranking .overflow-x-auto { -webkit-overflow-scrolling: touch; }
-
-            #view-scoresheet > .no-print {
-                min-height: 38px !important;
-                padding: 3px 7px !important;
-                flex-wrap: nowrap !important;
-                gap: 6px !important;
-            }
-            #view-scoresheet > .no-print button { min-height: 33px !important; }
-            #jba-sheet-wrapper { padding: 4px !important; -webkit-overflow-scrolling: touch; }
-            #jba-sheet-wrapper .sheet { margin-left: auto !important; margin-right: auto !important; }
-
-            /* スマホのタップ領域を確保。既存色と角丸は維持 */
-            #app-wrapper button, #app-wrapper input, #app-wrapper select, #app-wrapper textarea {
-                touch-action: manipulation;
-            }
-            #app-wrapper input, #app-wrapper select, #app-wrapper textarea { font-size: max(14px, 1em); }
         }
 
-        /* 縦持ち端末ではアプリ画面を横向きサイズに回転して表示する */
-        @media screen and (max-width: 950px) and (pointer: coarse) and (orientation: portrait) {
-            #app-wrapper {
-                position: fixed !important;
-                top: 0 !important;
-                left: 100vw !important;
-                width: 100dvh !important;
-                height: 100vw !important;
-                transform: rotate(90deg) !important;
-                transform-origin: top left !important;
-                max-width: none !important;
-            }
+        /* 縦画面では回転させず、横向きにするよう案内する。
+           ブラウザの仕様上、通常のWebページだけで端末の物理回転を強制できないため。 */
+        @media screen and (max-width: 950px) and (pointer: coarse) and (orientation: portrait){
+            #mobile-landscape-gate{display:flex;}
+            #app-wrapper{visibility:hidden !important;}
         }
-        @media screen and (max-width: 950px) and (pointer: coarse) and (orientation: landscape) {
-            #app-wrapper {
-                position: fixed !important;
-                inset: 0 !important;
-                width: 100vw !important;
-                height: 100dvh !important;
-                transform: none !important;
-                transform-origin: center center !important;
-            }
+        @media screen and (max-width: 950px) and (pointer: coarse) and (orientation: landscape){
+            #mobile-landscape-gate{display:none !important;}
+            #app-wrapper{visibility:visible !important;}
         }
 
     </style>
 </head>
 <body>
-
     <div id="app-wrapper">
         <!-- ヘッダー -->
         <header class="bg-white border border-zinc-200/80 rounded-xl shrink-0 mb-1.5 shadow-sm">
@@ -1596,7 +1526,8 @@
 <script>window.addEventListener('message', function(event) {
     const data = event && event.data ? event.data : {};
     if (data.type === 'HMBC_RESET_ALL' && typeof resetAllGame === 'function') resetAllGame();
-});</script></body>
+});</script>
+</body>
 </html></template>
 <script>
         function clearLegacySavedInputs() {
@@ -1923,34 +1854,27 @@
             }
         }
 
-        // スマートフォンでは横画面ロックを試し、非対応ブラウザでは横長UIに回転して表示する。
-        window.__hmbcMobileGateDismissed = false;
+        // スマートフォンでは横画面ロックを試す。
+        // 通常のブラウザでは端末の物理回転を完全強制できないため、非対応時は横向きになるまで画面を固定する。
         function updateMobileLandscapeGate() {
             const gate = document.getElementById('mobile-landscape-gate');
             if (!gate) return;
             const isPhone = window.matchMedia('(max-width: 950px) and (pointer: coarse)').matches;
             const isPortrait = window.matchMedia('(orientation: portrait)').matches;
-            if (!isPortrait) window.__hmbcMobileGateDismissed = false;
-            gate.classList.toggle('is-visible', isPhone && isPortrait && !window.__hmbcMobileGateDismissed);
+            gate.classList.toggle('is-visible', isPhone && isPortrait);
         }
         async function startMobileLandscape() {
             try {
                 if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
                     await document.documentElement.requestFullscreen();
                 }
-            } catch (e) {
-                // 全画面化に対応しないブラウザではCSSの横向き表示を使う。
-            }
+            } catch (e) {}
             try {
                 if (screen.orientation && typeof screen.orientation.lock === 'function') {
                     await screen.orientation.lock('landscape');
                 }
-            } catch (e) {
-                // iOS Safariなどロック非対応ブラウザでは横長レイアウトに切り替える。
-            }
-            window.__hmbcMobileGateDismissed = true;
-            document.getElementById('mobile-landscape-gate')?.classList.remove('is-visible');
-            setTimeout(updateMobileLandscapeGate, 250);
+            } catch (e) {}
+            updateMobileLandscapeGate();
         }
         window.addEventListener('DOMContentLoaded', updateMobileLandscapeGate);
         window.addEventListener('resize', updateMobileLandscapeGate);
@@ -2507,9 +2431,9 @@
                                             <div class="h-full flex items-center justify-between bg-white border border-zinc-200/90 rounded-lg px-2 py-0.5">
                                                 <span class="text-xs font-bold text-zinc-700 truncate pr-1">${item.label}</span>
                                                 <div class="flex items-center gap-1.5 shrink-0">
-                                                    <button type="button" onclick="adjustPlayerStat('${teamCode}', ${idx}, '${item.key}', -1)" class="w-6 h-6 md:w-8 md:h-8 rounded-md bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-base flex items-center justify-center">-</button>
+                                                    <button type="button" onclick="adjustPlayerStat('${teamCode}', ${idx}, '${item.key}', -1)" class="stat-adjust-btn w-6 h-6 md:w-8 md:h-8 rounded-md bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-base flex items-center justify-center">-1</button>
                                                     <span class="font-mono-num font-extrabold text-sm md:text-base w-6 text-center ${item.color}">${item.val}</span>
-                                                    <button type="button" onclick="adjustPlayerStat('${teamCode}', ${idx}, '${item.key}', 1)" class="w-6 h-6 md:w-8 md:h-8 rounded-md bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-base flex items-center justify-center">+</button>
+                                                    <button type="button" onclick="adjustPlayerStat('${teamCode}', ${idx}, '${item.key}', 1)" class="stat-adjust-btn w-6 h-6 md:w-8 md:h-8 rounded-md bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-base flex items-center justify-center">+1</button>
                                                 </div>
                                             </div>
                                         `).join('')}
