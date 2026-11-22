@@ -22,21 +22,6 @@
             padding: 0;
             overflow: hidden;
         }
-
-        /* スマホ縦持ち時に自動で横画面表示にするための強制回転ラッパー */
-        @media screen and (max-width: 900px) and (orientation: portrait) {
-            body {
-                width: 100dvh;
-                height: 100vw;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                transform: rotate(-90deg);
-                transform-origin: top left;
-                overflow: hidden;
-            }
-        }
-
         .font-mono-num {
             font-family: 'JetBrains Mono', monospace;
             font-variant-numeric: tabular-nums;
@@ -273,6 +258,133 @@
                 padding: 6mm 6.5mm 5mm !important;
                 box-shadow: none !important;
             }
+        }
+
+        /* ==========================================
+           スマートフォン専用UI
+           横向き強制をやめ、縦画面で操作できるレイアウトにする
+        ========================================== */
+        @media screen and (max-width: 767px) and (orientation: portrait) {
+            body { overflow: hidden; }
+            #app-wrapper {
+                position: relative;
+                top: auto; left: auto;
+                width: 100vw;
+                height: 100dvh;
+                transform: none;
+                padding: 6px 6px 68px;
+                background: #f4f4f5;
+            }
+            #app-wrapper > header {
+                margin-bottom: 6px;
+                border-radius: 14px;
+            }
+            #app-wrapper > header > div {
+                height: 48px;
+                padding: 0 10px;
+            }
+            #app-wrapper > header .font-bold.text-zinc-700 { display:none; }
+            #app-wrapper > header .w-6 {
+                width: 32px; height: 32px; border-radius: 9px;
+                font-size: 10px;
+            }
+            #main-tabs {
+                display: none;
+            }
+            #app-wrapper > header > div::after {
+                content: 'HMBC';
+                font-size: 14px; font-weight: 800; letter-spacing: .02em;
+                color: #3f3f46; margin-right: auto;
+            }
+            #app-wrapper > header button[onclick="openResetConfirm()"] {
+                width: 36px; height: 36px; padding: 0;
+                justify-content: center; border-radius: 10px;
+            }
+            #app-wrapper > header button[onclick="openResetConfirm()"] span { display:none; }
+            #app-wrapper > header button[onclick="openResetConfirm()"] i { width:18px; height:18px; }
+
+            #app-wrapper > main {
+                min-height: 0;
+                height: calc(100dvh - 120px);
+            }
+            #view-timer-app, #view-board, #view-practice, #view-scoresheet, #view-ranking {
+                border-radius: 14px;
+                min-height: 0;
+            }
+
+            /* 下部ナビゲーション */
+            #app-wrapper::after {
+                content: '';
+                position: fixed; z-index: 100;
+                left: 6px; right: 6px; bottom: 6px;
+                height: 58px;
+                background: rgba(255,255,255,.96);
+                border: 1px solid #e4e4e7;
+                border-radius: 18px;
+                box-shadow: 0 8px 30px rgba(0,0,0,.12);
+                pointer-events: none;
+            }
+            #app-wrapper > header + main::after {
+                content: ''; position: fixed; z-index: 101;
+                left: 10px; right: 10px; bottom: 9px; height: 52px;
+                pointer-events: none;
+            }
+            /* タブボタンを画面下へ移動 */
+            #app-wrapper > header #main-tabs {
+                display: flex; position: fixed; z-index: 110;
+                left: 8px; right: 8px; bottom: 9px;
+                max-width: none; width: calc(100vw - 16px);
+                height: 52px; padding: 3px; gap: 1px;
+                background: transparent;
+                overflow: visible;
+                justify-content: space-around;
+            }
+            #app-wrapper > header #main-tabs button {
+                flex: 1 1 0; min-width: 0; height: 46px;
+                padding: 5px 2px 3px;
+                border-radius: 13px;
+                font-size: 10px; font-weight: 800;
+                display: flex; align-items: center; justify-content: center;
+                white-space: normal;
+                color: #71717a;
+                background: transparent; box-shadow: none;
+            }
+            #app-wrapper > header #main-tabs button::before {
+                content: ''; display:block; width: 18px; height: 18px; margin-bottom: 2px;
+                border: 2px solid currentColor; border-radius: 5px; opacity: .9;
+            }
+            #app-wrapper > header #main-tabs button:nth-child(1)::before { border-radius:50%; }
+            #app-wrapper > header #main-tabs button:nth-child(2)::before { transform: rotate(45deg); border-radius:3px; }
+            #app-wrapper > header #main-tabs button:nth-child(3)::before { border-radius:3px; }
+            #app-wrapper > header #main-tabs button:nth-child(4)::before { border-radius:2px; }
+            #app-wrapper > header #main-tabs button:nth-child(5)::before { border-radius:50%; }
+            #app-wrapper > header #main-tabs button.bg-white {
+                background: #27272a; color: #fff; box-shadow: 0 3px 10px rgba(0,0,0,.16);
+            }
+
+            /* スコア入力画面を縦スクロール可能に */
+            #view-practice { overflow: auto; padding-bottom: 4px; }
+            #view-practice > div { border-radius: 14px; }
+            #view-practice .grid { min-width: 0; }
+            #view-practice table { font-size: 11px; }
+            #view-practice input, #view-practice select, #view-practice button { min-height: 40px; }
+
+            /* 作戦盤 */
+            #view-board { overflow: auto; }
+            #view-board .board-canvas-container, #view-board svg { max-width: 100%; }
+
+            /* JBAプレビューは横幅を保ち、横スクロールで確認 */
+            #view-scoresheet { overflow: hidden; }
+            #jba-sheet-wrapper { overflow: auto; -webkit-overflow-scrolling: touch; padding: 6px; }
+            #jba-sheet-wrapper .sheet { margin: 0; }
+
+            /* ランキング */
+            #view-ranking { overflow: auto; }
+        }
+
+        @media screen and (max-width: 767px) and (orientation: landscape) {
+            #app-wrapper { padding: 4px 6px 4px; }
+            #main-tabs { max-width: 72%; }
         }
     
         #view-timer-app { min-height: 0; overflow: hidden; }
@@ -834,6 +946,31 @@
             right: 0;
             margin-top: 4px;
             z-index: 40;
+        }
+
+        @media screen and (max-width: 767px) and (orientation: portrait) {
+            #app-wrapper { padding: 0; background:#f4f4f5; }
+            #view-timer { gap: 6px !important; padding: 0 1px 2px; }
+            #view-timer > .grid:first-child {
+                display:grid; grid-template-columns:1fr 1fr !important;
+                grid-template-rows: 1fr 1fr; gap:6px; height:44% !important;
+            }
+            #view-timer > .grid:first-child > div:nth-child(1) { grid-column:1 / -1; grid-row:1; min-height:0; }
+            #view-timer > .grid:first-child > div:nth-child(2) { grid-column:1; grid-row:2; }
+            #view-timer > .grid:first-child > div:nth-child(3) { grid-column:2; grid-row:2; }
+            #view-timer > .grid:first-child > div { border-radius:16px; padding:8px; }
+            #main-timer-display { font-size: clamp(48px, 17vw, 82px) !important; }
+            #shot-clock-display { font-size: clamp(42px, 14vw, 70px) !important; }
+            #period-display { font-size: clamp(28px, 9vw, 48px) !important; }
+            #view-timer > .grid:last-child {
+                display:grid; grid-template-columns:1fr 1fr; gap:6px;
+            }
+            #view-timer > .grid:last-child > div { border-radius:16px; padding:8px; }
+            #score-display-home, #score-display-guest {
+                font-size: clamp(64px, 22vw, 110px) !important;
+            }
+            #team-name-home, #team-name-guest { font-size:14px !important; }
+            #view-timer button { min-height:36px; }
         }
     </style>
 </head>
@@ -2483,22 +2620,22 @@
         };
 
         function createDefaultBoardTokens() {
-            // ファイブアウト（5-OUT）フォーメーション（左ゴール側攻め）
+            // ファイブアウト（5-OUT）フォーメーション（右ゴール側攻め）
             return [
                 // チームA（赤・オフェンス）5-OUT配置
-                { id: 'A1', team: 'A', label: '1', x: 0.38, y: 0.50 }, // トップ
-                { id: 'A2', team: 'A', label: '2', x: 0.31, y: 0.16 }, // 右ウイング
-                { id: 'A3', team: 'A', label: '3', x: 0.31, y: 0.84 }, // 左ウイング
-                { id: 'A4', team: 'A', label: '4', x: 0.09, y: 0.10 }, // 右コーナー
-                { id: 'A5', team: 'A', label: '5', x: 0.09, y: 0.90 }, // 左コーナー
+                { id: 'A1', team: 'A', label: '1', x: 0.62, y: 0.50 }, // トップ
+                { id: 'A2', team: 'A', label: '2', x: 0.69, y: 0.16 }, // 左ウイング
+                { id: 'A3', team: 'A', label: '3', x: 0.69, y: 0.84 }, // 右ウイング
+                { id: 'A4', team: 'A', label: '4', x: 0.91, y: 0.10 }, // 左コーナー
+                { id: 'A5', team: 'A', label: '5', x: 0.91, y: 0.90 }, // 右コーナー
                 // チームB（青・ディフェンス）マンツーマン対峙配置
-                { id: 'B1', team: 'B', label: '1', x: 0.32, y: 0.50 },
-                { id: 'B2', team: 'B', label: '2', x: 0.26, y: 0.22 },
-                { id: 'B3', team: 'B', label: '3', x: 0.26, y: 0.78 },
-                { id: 'B4', team: 'B', label: '4', x: 0.09, y: 0.18 },
-                { id: 'B5', team: 'B', label: '5', x: 0.09, y: 0.82 },
+                { id: 'B1', team: 'B', label: '1', x: 0.68, y: 0.50 },
+                { id: 'B2', team: 'B', label: '2', x: 0.74, y: 0.22 },
+                { id: 'B3', team: 'B', label: '3', x: 0.74, y: 0.78 },
+                { id: 'B4', team: 'B', label: '4', x: 0.91, y: 0.18 },
+                { id: 'B5', team: 'B', label: '5', x: 0.91, y: 0.82 },
                 // バスケットボール（表記: B）
-                { id: 'BALL', team: 'BALL', label: 'B', x: 0.40, y: 0.46 }
+                { id: 'BALL', team: 'BALL', label: 'B', x: 0.60, y: 0.46 }
             ];
         }
 
@@ -2511,7 +2648,7 @@
                 id: `${team}${Date.now()}`,
                 team: team,
                 label: String(nextNum),
-                x: team === 'A' ? 0.86 - offset : 0.64 - offset,
+                x: team === 'A' ? 0.14 + offset : 0.36 + offset,
                 y: 0.50
             });
             renderBoardTokens();
@@ -2603,10 +2740,10 @@
             const availW = Math.max(100, wRect.width - pad);
             const availH = Math.max(100, wRect.height - pad);
 
-            let targetW = availW * 0.5; // 自動で50%ズーム（縮小）
+            let targetW = availW;
             let targetH = targetW / aspect;
-            if (targetH > availH * 0.5) {
-                targetH = availH * 0.5;
+            if (targetH > availH) {
+                targetH = availH;
                 targetW = targetH * aspect;
             }
 
